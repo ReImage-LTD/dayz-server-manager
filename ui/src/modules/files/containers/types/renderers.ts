@@ -4,6 +4,7 @@ import { ICellRendererParams } from "ag-grid-community";
 import { ColBase } from "./columns";
 
 @Component({
+    standalone: false,
     selector: 'generic-list-renderer',
     template: `
         <ng-select
@@ -77,6 +78,7 @@ export class GenericListRenderer implements ICellRendererAngularComp {
 }
 
 @Component({
+    standalone: false,
     selector: 'category-renderer',
     template: `
         <ng-select [items]="dropdownList"
@@ -143,6 +145,7 @@ export class CategoryRenderer implements ICellRendererAngularComp {
 }
 
 @Component({
+    standalone: false,
     selector: 'value-renderer',
     template: `
         <ng-select [items]="dropdownList"
@@ -174,6 +177,7 @@ export class ValueRenderer extends CategoryRenderer implements ICellRendererAngu
 }
 
 @Component({
+    standalone: false,
     selector: 'usage-renderer',
     template: `
         <ng-select [items]="dropdownList"
@@ -218,6 +222,7 @@ export class UsageRenderer extends CategoryRenderer implements ICellRendererAngu
 }
 
 @Component({
+    standalone: false,
     selector: 'checkbox-renderer',
     template: `
       <input
@@ -250,6 +255,7 @@ export class CheckboxRenderer implements ICellRendererAngularComp {
 
 
 @Component({
+    standalone: false,
     selector: 'rarity-renderer',
     template: `
         <select [(ngModel)]="value"

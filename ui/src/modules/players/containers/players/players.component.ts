@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { PlayersService } from '../../services/players.service';
-import { Subscription } from 'rxjs';
+import { firstValueFrom, Subscription } from 'rxjs';
 
 @Component({
+    standalone: false,
     selector: 'sb-players',
     templateUrl: './players.component.html',
     styleUrls: ['players.component.scss'],
@@ -66,38 +67,38 @@ export class PlayersComponent implements OnInit {
     public async ban(): Promise<void> {
         if (this.steam64Input?.length !== 17 && this.dayzId?.length !== 44) return;
         if (typeof window !== 'undefined' && !window.confirm(`Ban player ${this.steam64Input || this.dayzId}?`)) return;
-        await this.playerService.ban(this.steam64Input || this.dayzId).toPromise();
+        await firstValueFrom(this.playerService.ban(this.steam64Input || this.dayzId));
         await this.playerService.loadLists();
     }
     public async unban(): Promise<void> {
         if (this.steam64Input?.length !== 17 && this.dayzId?.length !== 44) return;
         if (typeof window !== 'undefined' && !window.confirm(`Unban player ${this.steam64Input || this.dayzId}?`)) return;
-        await this.playerService.unban(this.steam64Input || this.dayzId).toPromise();
+        await firstValueFrom(this.playerService.unban(this.steam64Input || this.dayzId));
         await this.playerService.loadLists();
     }
     public async whitelist(): Promise<void> {
         if (this.steam64Input?.length !== 17 && this.dayzId?.length !== 44) return;
-        await this.playerService.whitelist(this.steam64Input || this.dayzId).toPromise();
+        await firstValueFrom(this.playerService.whitelist(this.steam64Input || this.dayzId));
         await this.playerService.loadLists();
     }
     public async unwhitelist(): Promise<void> {
         if (this.steam64Input?.length !== 17 && this.dayzId?.length !== 44) return;
-        await this.playerService.unwhitelist(this.steam64Input || this.dayzId).toPromise();
+        await firstValueFrom(this.playerService.unwhitelist(this.steam64Input || this.dayzId));
         await this.playerService.loadLists();
     }
     public async prio(): Promise<void> {
         if (this.steam64Input?.length !== 17 && this.dayzId?.length !== 44) return;
-        await this.playerService.prio(this.steam64Input || this.dayzId).toPromise();
+        await firstValueFrom(this.playerService.prio(this.steam64Input || this.dayzId));
         await this.playerService.loadLists();
     }
     public async unprio(): Promise<void> {
         if (this.steam64Input?.length !== 17 && this.dayzId?.length !== 44) return;
-        await this.playerService.unprio(this.steam64Input || this.dayzId).toPromise();
+        await firstValueFrom(this.playerService.unprio(this.steam64Input || this.dayzId));
         await this.playerService.loadLists();
     }
 
     public async reloadRconBans(): Promise<void> {
-        await this.playerService.reloadRconBans().toPromise();
+        await firstValueFrom(this.playerService.reloadRconBans());
         await this.playerService.loadLists();
     }
 

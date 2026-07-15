@@ -76,7 +76,7 @@
             aria-label="Player result pages"></ngb-pagination>
         <label class="page-size-control">
             <span>Rows</span>
-            <select class="custom-select" name="pageSize"
+            <select class="form-select" name="pageSize"
                 [ngModel]="(playerService.state$ | async)!.pageSize"
                 (ngModelChange)="playerService.updateState({ pageSize: $event, page: 1 })">
                 <option [ngValue]="10">10</option>

@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { LogType, LogTypeEnum, MetricType, MetricTypeEnum, MetricWrapper, ServerInfo, SystemReport, isSameServerInfo } from '../models';
 import { AuthService } from '../../auth/services/auth.service';
 import Chart from 'chart.js';
-import { BehaviorSubject, Observable, of, Subject, Subscription, timer } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, Observable, of, Subject, Subscription, timer } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 
 const processError = (err: any, prefix?: string): Observable<any> => {
@@ -175,7 +175,7 @@ export class AppCommonService {
             },
         );
 
-        void this.fetchServerInfo().toPromise();
+        void firstValueFrom(this.fetchServerInfo());
         this.adjustRefreshRate(this.refreshRate$);
         if (this.refreshRate$ < 0) {
             this.triggerUpdate();

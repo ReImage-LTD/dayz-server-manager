@@ -86,6 +86,7 @@ describe('Test class Backups', () => {
 
     it('lists safely and restores through staging', async () => {
         fs.mkdirSync('/test/backups/mpmissions_0123456789abcdef', { recursive: true });
+        fs.mkdirSync('/test/backups/mpmissions_fedcba9876543210', { recursive: true });
         fs.writeFileSync('/test/backups/mpmissions_0123456789abcdef/restored.txt', 'restored');
         fs.mkdirSync('/test/testserver/mpmissions', { recursive: true });
         fs.writeFileSync('/test/testserver/mpmissions/old.txt', 'old');
@@ -94,7 +95,7 @@ describe('Test class Backups', () => {
         manager.getServerPath.returns('/test/testserver');
         const backup = injector.resolve(Backups);
 
-        expect(await backup.getBackups()).to.have.length(1);
+        expect(await backup.getBackups()).to.have.length(2);
         await backup.restoreBackup('mpmissions_0123456789abcdef');
 
         expect(fs.existsSync('/test/testserver/mpmissions/restored.txt')).to.be.true;

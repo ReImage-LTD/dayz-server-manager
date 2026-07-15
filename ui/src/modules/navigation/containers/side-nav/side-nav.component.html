@@ -1,7 +1,7 @@
 <nav class="sb-sidenav accordion" id="sidenavAccordion" [ngClass]="sidenavStyle" aria-label="Primary navigation">
     <div class="instance-block">
         <span class="instance-label">Control node</span>
-        <label class="sr-only" for="activeNode">Active server instance</label>
+        <label class="visually-hidden" for="activeNode">Active server instance</label>
         <select id="activeNode" class="instance-select"
                 [ngModel]="(fleet.activeNode$ | async)?.descriptor?.id"
                 (ngModelChange)="fleet.select($event, true)">

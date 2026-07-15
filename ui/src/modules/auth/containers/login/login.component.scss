@@ -93,7 +93,7 @@ h1 {
     padding: 1.75rem;
 }
 
-.form-group {
+.login-field {
     margin-bottom: 1.25rem;
 }
 
@@ -140,24 +140,25 @@ label {
     font-size: 0.68rem;
 }
 
-.custom-control-label {
+.form-check-label {
     color: #aebdca;
     font-size: 0.72rem;
     letter-spacing: 0;
     text-transform: none;
 }
 
-.custom-control-label::before {
+.form-check-input {
     border-color: #405469;
-    background: #0b131d;
+    background-color: #0b131d;
 }
 
-.custom-control-input:checked ~ .custom-control-label::before {
+.form-check-input:checked {
     border-color: #329bc9;
-    background: #329bc9;
+    background-color: #329bc9;
 }
 
-.custom-control-input:focus ~ .custom-control-label::before {
+.form-check-input:focus {
+    border-color: #5cc8ff;
     box-shadow: 0 0 0 0.2rem rgba(92, 200, 255, 0.18);
 }
 

@@ -89,7 +89,7 @@
                         (click)="onSubmit()"
                         [disabled]="submitting"
                 >
-                    <fa-icon *ngIf="submitting" [icon]='["fas", "spinner"]' [classes]="['fa-spin']"></fa-icon>
+                    <fa-icon *ngIf="submitting" [icon]='["fas", "spinner"]' animation="spin"></fa-icon>
                     {{ submitting ? 'Saving...' : 'Submit changes' }}
                 </button>
                 <button type="button"

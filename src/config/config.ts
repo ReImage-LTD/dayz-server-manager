@@ -452,7 +452,7 @@ export class RemoteNodeConfig {
 
     public capabilities: string[] = [];
 
-    public authorizationLevel: UserLevel = 'view';
+    public authorizationLevel?: UserLevel = 'view';
 
 }
 

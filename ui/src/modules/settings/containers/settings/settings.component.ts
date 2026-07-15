@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Config, DiscordChannelType, Event, Hook, RemoteNodeConfig, WorkshopMod } from '../../../app-common/models';
 import { AppCommonService } from '../../../app-common/services/app-common.service';
 import * as commentJson from 'comment-json';
+import { firstValueFrom } from 'rxjs';
 
 import configschema from '../../../../../../src/config/config.schema.json';
 
@@ -17,6 +18,7 @@ interface Property {
 }
 
 @Component({
+    standalone: false,
     selector: 'sb-settings',
     templateUrl: './settings.component.html',
     styleUrls: ['settings.component.scss'],
@@ -46,9 +48,9 @@ export class SettingsComponent implements OnInit {
         }
         this.loading = true;
         this.outcomeBadge = undefined;
-        this.appCommon.updateManagerConfig(
+        firstValueFrom(this.appCommon.updateManagerConfig(
             commentJson.stringify(this.config),
-        ).toPromise().then(
+        )).then(
             () => {
                 this.loading = false;
                 this.outcomeBadge = {
@@ -74,7 +76,7 @@ export class SettingsComponent implements OnInit {
     public reset(): void {
         this.loading = true;
         this.outcomeBadge = undefined;
-        this.appCommon.fetchManagerConfig().toPromise().then(
+        firstValueFrom(this.appCommon.fetchManagerConfig()).then(
             (config) => {
                 this.config = commentJson.parse(config) as any;
                 if (this.config.discordChannels?.length) {

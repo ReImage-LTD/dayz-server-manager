@@ -3,6 +3,7 @@ import { MetricType, MetricWrapper, MetricTypeEnum } from '../../../app-common/m
 import { ApiFetcher, AppCommonService } from '../../../app-common/services/app-common.service';
 
 @Component({
+    standalone: false,
     selector: 'sb-system',
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './system.component.html',

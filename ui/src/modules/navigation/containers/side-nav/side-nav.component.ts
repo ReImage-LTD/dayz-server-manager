@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import { FleetContextService } from '../../../app-common/services/fleet-context.service';
 
 @Component({
+    standalone: false,
     selector: 'sb-side-nav',
     templateUrl: './side-nav.component.html',
     styleUrls: ['side-nav.component.scss'],

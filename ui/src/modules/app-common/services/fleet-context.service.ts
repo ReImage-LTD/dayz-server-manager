@@ -1,6 +1,6 @@
 import { HttpBackend, HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import { FleetNodeStatus } from '../models';
 
 @Injectable({ providedIn: 'root' })
@@ -35,10 +35,10 @@ export class FleetContextService {
     }
 
     public async load(headers: { [key: string]: string }): Promise<void> {
-        const nodes = await this.http.get<FleetNodeStatus[]>(
+        const nodes = await firstValueFrom(this.http.get<FleetNodeStatus[]>(
             '/api/nodes',
             { headers, withCredentials: true },
-        ).toPromise().catch(() => []);
+        )).catch(() => []);
         this.nodesSubject.next(nodes);
         const savedId = localStorage.getItem('DZSM_ACTIVE_NODE');
         this.select(nodes.some((node) => node.descriptor.id === savedId)

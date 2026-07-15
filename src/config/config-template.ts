@@ -41,8 +41,8 @@ export const generateConfigTemplate = (schema: any, values?: Config): string => 
         if (values && typeof values[propKey] !== 'undefined' && values[propKey] !== null) {
             propValue = values[propKey];
         }
-        const json = JSON
-            .stringify(propValue, null, 4)
+        const json = (JSON
+            .stringify(propValue, null, 4) ?? 'null')
             .replace(/\n/g, `\n${indent}`);
         fileContent += `${indent}"${propKey}": ${json}${(i < (schema.propertyOrder.length - 1)) ? ',' : ''}`;
 

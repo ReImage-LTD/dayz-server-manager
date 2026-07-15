@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
+    standalone: false,
     selector: 'sb-dashboard-head',
     templateUrl: './dashboard-head.component.html',
     styleUrls: ['dashboard-head.component.scss'],

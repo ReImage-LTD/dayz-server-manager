@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { AppCommonService } from '../../app-common/services/app-common.service';
 
 @Component({
+    standalone: false,
     selector: 'sb-dashboard-system',
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './dashboard-system.component.html',

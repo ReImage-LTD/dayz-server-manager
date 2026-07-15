@@ -73,7 +73,7 @@ a:hover {
 }
 
 .form-control,
-.custom-select,
+.form-select,
 select,
 textarea,
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
@@ -83,7 +83,7 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
 }
 
 .form-control:focus,
-.custom-select:focus,
+.form-select:focus,
 select:focus,
 textarea:focus,
 input:focus {
@@ -143,6 +143,9 @@ textarea::placeholder {
 }
 
 .table {
+    --bs-table-bg: transparent;
+    --bs-table-border-color: var(--ops-border);
+    --bs-table-color: var(--ops-text);
     color: var(--ops-text);
 }
 
@@ -160,8 +163,8 @@ textarea::placeholder {
     border-color: var(--ops-border);
 }
 
-.table-striped tbody tr:nth-of-type(odd) {
-    background: rgba(255, 255, 255, 0.018);
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    --bs-table-bg-type: rgba(255, 255, 255, 0.018);
 }
 
 .nav-tabs {

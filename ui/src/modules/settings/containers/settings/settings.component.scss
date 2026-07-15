@@ -253,7 +253,8 @@ $danger: #ff747d;
     background: rgba(88, 151, 245, .1);
 }
 
-.form-control {
+.form-control,
+.form-select {
     height: calc(2.25rem + 2px);
     color: $text;
     background-color: #091523;
@@ -273,7 +274,7 @@ $danger: #ff747d;
     }
 }
 
-select.form-control option {
+select.form-select option {
     color: $text;
     background: #091523;
 }

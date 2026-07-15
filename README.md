@@ -399,8 +399,8 @@ In the server manager config add a hook object to the hooks array like so:
 <br><a name="linux-server"></a>  
 ## Linux Server <hr>
 
-The manager was tested on Ubuntu 22 (latest).
-Other up2date debian variants should work as well.
+The manager and container image target Ubuntu 24.04 LTS.
+Other up-to-date Debian-based distributions should work as well.
 <br>
 The DayZServer only works on x86 platforms, ARM is NOT supported!
 <br>
@@ -560,7 +560,7 @@ You can, however, change these paths to fit your needs
 <br><a name="technical-details"></a>  
 ## Technical Details <hr>  
 
-The server manager is a self contained NodeJS-App written in TypeScript and packaged with pkg.  
+The server manager is a self-contained Node.js app written in TypeScript and packaged with `@yao-pkg/pkg`.
 You DON'T need to install NodeJS or anything else.  
 Everything you need is contained in the single executable (exe).  
 However, due to that the exe is around 90MB in size.  
@@ -652,22 +652,23 @@ This way the traffic is handled securely until terminated at the reverse proxy.<
 <br><a name="development"></a>  
 ## Development <hr>
 
-To work on the server manager, the nodejs runtime (v14) must be installed and the node extensions must be compiled locally.  
+To work on the server manager, install Node.js 24 LTS and npm 11. The native Node.js extensions must be compiled locally.
 To do this, you will need a C++ compiler:
 
 Windows:
 ```
-choco install python python2 -y
+choco install python -y
 choco install visualstudio2019buildtools -y
 choco install visualstudio2019-workload-vctools -y
 ```
 
 Linux:
 ```
-apt-get install -y make python3 python2 build-essential
+apt-get install -y make python3 build-essential
 ```
 
 When the tools are installed, clone the repository and run `npm ci`.
+The root install also installs the UI dependencies; do not run a second UI install. Full builds additionally require Mikero's `makepbo` on `PATH` to compile the three DayZ PBOs.
 
 When everything is installed, you can start the manager by running:
 
@@ -687,4 +688,3 @@ npm run startPacked
 ### NO WARRANTY / GUARANTEE RESPONSIBILITY
 
 By using the software and/or thw source code you agree that the authors CAN NOT be held responsible for any damages caused by the software and/or the source code.
-

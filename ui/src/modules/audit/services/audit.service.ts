@@ -80,7 +80,7 @@ export class AuditService {
                 this._total$.next(result.total);
             });
 
-        this._search$.next();
+        this._search$.next(undefined);
     }
 
     protected listenToPlayerChanges(): void {
@@ -91,7 +91,7 @@ export class AuditService {
             (audits) => {
                 if (audits?.length) {
                     this.currentAudits = audits;
-                    this._search$.next();
+                    this._search$.next(undefined);
                 }
             },
         );
@@ -145,7 +145,7 @@ export class AuditService {
 
     protected _set(patch: Partial<State>): void {
         Object.assign(this._state, patch);
-        this._search$.next();
+        this._search$.next(undefined);
     }
 
     protected _search(): Observable<SearchResult> {

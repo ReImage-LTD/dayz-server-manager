@@ -244,7 +244,7 @@ export class ManagerController {
                 type: 'remote',
                 endpoint: remote.endpoint,
                 capabilities: [...remote.capabilities],
-                authorizationLevel: remote.authorizationLevel,
+                authorizationLevel: remote.authorizationLevel || 'view',
             }, remote.sharedSecret);
         }
 

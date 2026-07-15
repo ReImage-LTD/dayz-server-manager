@@ -12,6 +12,7 @@ import { SBSortableHeaderDirective, SortEvent } from '../../../players/directive
 import { Observable } from 'rxjs';
 
 @Component({
+    standalone: false,
     selector: 'sb-audit-table',
     templateUrl: './audit-table.component.html',
     styleUrls: ['audit-table.component.scss'],

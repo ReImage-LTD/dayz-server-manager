@@ -11,7 +11,7 @@
             </header>
 
             <form class="login-form" #loginForm="ngForm" (ngSubmit)="login()" novalidate>
-                <div class="form-group">
+                <div class="login-field">
                     <label for="inputUser">Username</label>
                     <input class="form-control"
                            id="inputUser"
@@ -27,7 +27,7 @@
                     />
                 </div>
 
-                <div class="form-group">
+                <div class="login-field">
                     <label for="inputPassword">Password</label>
                     <input class="form-control"
                            id="inputPassword"
@@ -41,16 +41,16 @@
                     />
                 </div>
 
-                <div class="form-group remember-row">
-                    <div class="custom-control custom-checkbox">
-                        <input class="custom-control-input"
+                <div class="login-field remember-row">
+                    <div class="form-check">
+                        <input class="form-check-input"
                                id="rememberPasswordCheck"
                                name="remember"
                                type="checkbox"
                                [disabled]="isLoading"
                                [(ngModel)]="remember"
                         />
-                        <label class="custom-control-label" for="rememberPasswordCheck">Remember this session</label>
+                        <label class="form-check-label" for="rememberPasswordCheck">Remember this session</label>
                     </div>
                     <span>Use only on a trusted device</span>
                 </div>

@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { SBRouteData, SideNavItem } from '../../models';
 
 @Component({
+    standalone: false,
     selector: 'sb-side-nav-item',
     templateUrl: './side-nav-item.component.html',
     styleUrls: ['side-nav-item.component.scss'],

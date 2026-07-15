@@ -4,6 +4,7 @@ import { NavigationService } from '../../services/navigation.service';
 import { Subscription } from 'rxjs';
 
 @Component({
+    standalone: false,
     selector: 'sb-breadcrumbs',
     templateUrl: './breadcrumbs.component.html',
     styleUrls: ['breadcrumbs.component.scss'],

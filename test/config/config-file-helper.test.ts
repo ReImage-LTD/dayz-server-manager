@@ -142,6 +142,14 @@ describe('Test class ConfigFileHelper', () => {
         expect(helper.getConfigFileContent(helper.getConfigFilePath())).to.include('fleet-secret');
     });
 
+    it('redacts stored config and validates updates', () => {
+        memfs({ ['/' + ConfigFileHelper.CFG_NAME]: VALID_CONFIG }, '/', injector);
+        const helper = injector.resolve(ConfigFileHelper);
+
+        expect(helper.getRedactedConfig()).not.to.include('test123');
+        expect(helper.validateConfigContent(VALID_CONFIG)).to.be.empty;
+    });
+
     it('provides a safe empty remote node default', () => {
         expect(new Config().remoteNodes).to.deep.equal([]);
     });

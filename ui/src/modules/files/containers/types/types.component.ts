@@ -34,8 +34,10 @@ import { AttributeOperation } from './ops';
 import * as columns from './columns';
 import { ItemCalculator } from './calc';
 import { MaxPriceCol, MaxStockCol, MinPriceCol, MinStockCol, QuantityPercentCol, RarityCol, SellPricePercentCol, TraderCategoryCol, TraderVariantOfCol } from './expansion-columns';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
+    standalone: false,
     selector: 'sb-types',
     templateUrl: './types.component.html',
     styleUrls: ['types.component.scss'],
@@ -157,17 +159,17 @@ export class TypesComponent implements OnInit {
             if (file.skipSave) continue;
             const fileContent = file.strinigfy();
             if (file.location === 'mission') {
-                await this.appCommon.updateMissionFile(
+                await firstValueFrom(this.appCommon.updateMissionFile(
                     file.file,
                     fileContent,
                     this.withBackup,
-                ).toPromise();
+                ));
             } else {
-                await this.appCommon.updateProfileFile(
+                await firstValueFrom(this.appCommon.updateProfileFile(
                     (file as any).file, // TODO remove when profile files get saveable
                     fileContent,
                     this.withBackup,
-                ).toPromise();
+                ));
             }
         }
     }
@@ -236,7 +238,7 @@ export class TypesComponent implements OnInit {
         // limits
         try {
             const limits = new LimitsFileWrapper('cfglimitsdefinition.xml');
-            await limits.parse(await this.appCommon.fetchMissionFile(limits.file).toPromise());
+            await limits.parse(await firstValueFrom(this.appCommon.fetchMissionFile(limits.file)));
             this.files.push(limits);
 
             const valuesCol = this.typesColumnDefs.find((x) => x.colId === 'Values');
@@ -279,7 +281,7 @@ export class TypesComponent implements OnInit {
 
         // server info
         try {
-            const serverInfo = await this.appCommon.fetchServerInfo().toPromise();
+            const serverInfo = await firstValueFrom(this.appCommon.fetchServerInfo());
             if (serverInfo?.worldName?.toLowerCase() === 'deerisle') {
                 const valuesCol = this.typesColumnDefs.find((x) => x.colId === 'Values');
                 if (valuesCol) {
@@ -316,7 +318,7 @@ export class TypesComponent implements OnInit {
                 new ClothingDumpFileWrapper('dzsm-clothingdump.json'),
                 new ItemDumpFileWrapper('dzsm-itemdump.json'),
             ];
-            const dumpFilesContents = await this.appCommon.fetchProfileFiles(dumpFiles.map((x) => x.file)).toPromise();
+            const dumpFilesContents = await firstValueFrom(this.appCommon.fetchProfileFiles(dumpFiles.map((x) => x.file)));
             for (let i = 0; i < dumpFilesContents.length; i++) {
                 const file = dumpFiles[i];
                 await file.parse(dumpFilesContents[i]);
@@ -407,7 +409,7 @@ export class TypesComponent implements OnInit {
         // economy core + types
         try {
             const core = new CoreFileWrapper('cfgEconomyCore.xml');
-            await core.parse(await this.appCommon.fetchMissionFile(core.file).toPromise());
+            await core.parse(await firstValueFrom(this.appCommon.fetchMissionFile(core.file)));
             this.files.push(core);
 
             const typesFiles: string[] = ['db/types.xml'];
@@ -427,14 +429,14 @@ export class TypesComponent implements OnInit {
                 }
             }
 
-            const typesFilesContents = await this.appCommon.fetchMissionFiles(typesFiles).toPromise();
+            const typesFilesContents = await firstValueFrom(this.appCommon.fetchMissionFiles(typesFiles));
             for (let i = 0; i < typesFiles.length; i++) {
                 const file = new TypesFileWrapper(typesFiles[i]);
                 await file.parse(typesFilesContents[i]);
                 this.files.push(file);
             }
 
-            const spawnableTypesFilesContents = await this.appCommon.fetchMissionFiles(spawnableTypesFiles).toPromise();
+            const spawnableTypesFilesContents = await firstValueFrom(this.appCommon.fetchMissionFiles(spawnableTypesFiles));
             for (let i = 0; i < spawnableTypesFiles.length; i++) {
                 const file = new SpawnableTypesFileWrapper(spawnableTypesFiles[i]);
                 await file.parse(spawnableTypesFilesContents[i]);
@@ -452,11 +454,11 @@ export class TypesComponent implements OnInit {
         // trader files
         try {
             const traderFilesPath = 'ExpansionMod/Market';
-            const traderFiles = ((await this.appCommon.fetchProfileDir(traderFilesPath).toPromise().catch()) || [])
+            const traderFiles = ((await firstValueFrom(this.appCommon.fetchProfileDir(traderFilesPath)).catch()) || [])
                 .map((x) => `${traderFilesPath}/${x}`)
                 .map((x) => new TraderFileWrapper(x, x.slice(0, x.lastIndexOf('.'))));
 
-            const traderFilesContents = await this.appCommon.fetchProfileFiles(traderFiles.map((x) => x.file)).toPromise();
+            const traderFilesContents = await firstValueFrom(this.appCommon.fetchProfileFiles(traderFiles.map((x) => x.file)));
             for (let i = 0; i < traderFilesContents.length; i++) {
                 await traderFiles[i].parse(traderFilesContents[i]);
                 if (traderFiles[i].content) {
@@ -482,7 +484,7 @@ export class TypesComponent implements OnInit {
         // hardline
         try {
             const hardlineFile = new HardlineFileWrapper('expansion/settings/HardlineSettings.json');
-            const hardlineContent = await this.appCommon.fetchMissionFile(hardlineFile.file).toPromise().catch();
+            const hardlineContent = await firstValueFrom(this.appCommon.fetchMissionFile(hardlineFile.file)).catch();
             await hardlineFile.parse(hardlineContent);
             this.hardlineFileIndex = this.files.push(hardlineFile) - 1;
 

@@ -390,7 +390,7 @@
     }
 
     .operation-controls .form-control,
-    .operation-controls .custom-select {
+    .operation-controls .form-select {
         min-width: 0;
         height: 2.25rem;
         color: var(--workbench-text);
@@ -405,7 +405,7 @@
         border-radius: 0.25rem 0 0 0.25rem;
     }
 
-    .operation-controls .custom-select {
+    .operation-controls .form-select {
         flex: 1 1 8rem;
     }
 
@@ -546,7 +546,7 @@
         }
 
         .operation-controls .form-control,
-        .operation-controls .custom-select,
+        .operation-controls .form-select,
         .operation-controls .btn {
             width: 100%;
             border-radius: 0.25rem;

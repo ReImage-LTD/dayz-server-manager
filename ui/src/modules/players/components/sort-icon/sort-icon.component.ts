@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
+    standalone: false,
     selector: 'sb-sort-icon',
     templateUrl: './sort-icon.component.html',
     styleUrls: ['sort-icon.component.scss'],

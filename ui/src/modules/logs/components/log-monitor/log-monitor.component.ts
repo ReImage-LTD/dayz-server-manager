@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { ApiFetcher, AppCommonService } from '../../../../modules/app-common/services/app-common.service';
 
 @Component({
+    standalone: false,
     selector: 'sb-log-monitor',
     templateUrl: './log-monitor.component.html',
     styleUrls: ['./log-monitor.component.scss'],

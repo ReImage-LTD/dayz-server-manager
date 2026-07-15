@@ -11,6 +11,7 @@ import {
 import { Chart } from 'chart.js';
 
 @Component({
+    standalone: false,
     selector: 'sb-charts-area',
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './charts-area.component.html',

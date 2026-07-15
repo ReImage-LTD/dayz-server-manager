@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
+    standalone: false,
     selector: 'sb-error-404',
     templateUrl: './error-404.component.html',
     styleUrls: ['error-404.component.scss'],

@@ -8,8 +8,8 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { AppCommonModule } from '../app-common/app-common.module';
 import { NavigationModule } from '../navigation/navigation.module';
 
-import { LeafletModule } from '@asymmetrik/ngx-leaflet';
-import { LeafletMarkerClusterModule } from '@asymmetrik/ngx-leaflet-markercluster';
+import { LeafletModule } from '@bluehalo/ngx-leaflet';
+import { LeafletMarkerClusterModule } from '@bluehalo/ngx-leaflet-markercluster';
 import { MapComponent } from './containers/map/map.component';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MapLootComponent } from './containers/map/map-loot.component';

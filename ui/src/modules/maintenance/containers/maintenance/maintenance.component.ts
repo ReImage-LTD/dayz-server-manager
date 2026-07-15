@@ -3,6 +3,7 @@ import { TrackedOperation } from '../../../app-common/models';
 import { BackupSummary, MaintenanceService } from '../../services/maintenance.service';
 
 @Component({
+    standalone: false,
     selector: 'sb-maintenance',
     templateUrl: './maintenance.component.html',
     styleUrls: ['maintenance.component.scss'],

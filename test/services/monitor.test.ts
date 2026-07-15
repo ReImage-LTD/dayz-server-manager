@@ -443,6 +443,15 @@ describe('Test class Monitor', () => {
         expect(serverStarter.killServer.callCount).to.equal(1);
     });
 
+    it('Monitor-startServer', async () => {
+        serverStarter.startServer.resolves(true);
+        const monitor = injector.resolve(Monitor);
+
+        expect(await monitor.startServer()).to.be.true;
+        expect(monitor.serverState).to.equal(ServerState.STARTING);
+        expect(serverStarter.startServer.calledWith(false)).to.be.true;
+    });
+
     it('Monitor-stuckstate', async () => {
 
         let emitted = 0;

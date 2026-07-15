@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { MetricTypeEnum, MetricWrapper, RconPlayer, IngameReportEntry, RconBan } from '../../app-common/models';
-import { BehaviorSubject, combineLatest, merge, Observable, of, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, combineLatest, firstValueFrom, merge, Observable, of, Subject, Subscription } from 'rxjs';
 import { debounceTime, delay, filter, first, map, switchMap, tap } from 'rxjs/operators';
 import { SortDirection } from '../directives/sortable.directive';
 import { AppCommonService } from 'src/modules/app-common/services/app-common.service';
@@ -99,16 +99,16 @@ export class PlayersService {
     public rconBans = new Map<string, RconBan>();
 
     public async loadLists(): Promise<void> {
-        this.bans = await this.readBanTxt().toPromise().catch(() => []).then((x) => new Set(x));
-        this.whitelisted = await this.readWhitelistTxt().toPromise().catch(() => []).then((x) => new Set(x));
-        this.priority = await this.readPriorityTxt().toPromise().catch(() => []).then((x) => new Set(x));
-        this.rconBans = await this.readRconBans().toPromise().catch(() => [] as RconBan[]).then((x) => new Map(x.map((y) => [y.id, y])));
+        this.bans = await firstValueFrom(this.readBanTxt()).catch(() => []).then((x) => new Set(x));
+        this.whitelisted = await firstValueFrom(this.readWhitelistTxt()).catch(() => []).then((x) => new Set(x));
+        this.priority = await firstValueFrom(this.readPriorityTxt()).catch(() => []).then((x) => new Set(x));
+        this.rconBans = await firstValueFrom(this.readRconBans()).catch(() => [] as RconBan[]).then((x) => new Map(x.map((y) => [y.id, y])));
 
         this.knownPlayers.forEach((x) => {
             this.updatePlayerWithIngame({ id2: x.steamid } as any);
         });
 
-        this._search$.next();
+        this._search$.next(undefined);
     }
 
     public constructor(
@@ -121,7 +121,7 @@ export class PlayersService {
             .pipe(
                 debounceTime(120)
             )
-            .subscribe(() => this._search$.next());
+            .subscribe(() => this._search$.next(undefined));
 
         this._search$
             .pipe(
@@ -137,30 +137,28 @@ export class PlayersService {
                 this._allTotal$.next(result.allTotal);
             });
 
-        this._search$.next();
+        this._search$.next(undefined);
 
     }
 
     protected async listenToPlayerChanges(): Promise<void> {
         const [rconPlayers, ingamePlayers] = await Promise.all([
-            this.appCommon.getApiFetcher<
+            firstValueFrom(this.appCommon.getApiFetcher<
                 MetricTypeEnum.PLAYERS,
                 MetricWrapper<RconPlayer[]>
             >(MetricTypeEnum.PLAYERS).data
                 .pipe(
                     filter((x) => !!x?.length),
                     first(),
-                )
-                .toPromise(),
-            this.appCommon.getApiFetcher<
+                )),
+            firstValueFrom(this.appCommon.getApiFetcher<
                 MetricTypeEnum.INGAME_PLAYERS,
                 MetricWrapper<IngameReportEntry[]>
             >(MetricTypeEnum.INGAME_PLAYERS)!.data
                 .pipe(
                     filter((x) => !!x?.length),
                     first(),
-                )
-                .toPromise(),
+                )),
         ]);
 
         const uniqueRconPlayers = new Map<string, RconPlayer>();
@@ -173,7 +171,7 @@ export class PlayersService {
         }));
         uniqueIngamePlayers.forEach((x) => this.updatePlayerWithIngame(x));
 
-        this._search$.next();
+        this._search$.next(undefined);
 
         this.appCommon.getApiFetcher<
             MetricTypeEnum.PLAYERS,
@@ -183,7 +181,7 @@ export class PlayersService {
                 if (data?.value) {
                     data.value.forEach((x) => this.updatePlayerWithRcon(x));
                     this.currentPlayers = data.value.map((x) => this.knownPlayers.get(x.beguid)!);
-                    this._search$.next();
+                    this._search$.next(undefined);
                 }
             }
         );
@@ -199,7 +197,7 @@ export class PlayersService {
                             this.steam64ToBEGUID(x.id2!)
                         )!)
                         .filter((x) => !!x);
-                    this._search$.next();
+                    this._search$.next(undefined);
                 }
             }
         );
@@ -253,7 +251,7 @@ export class PlayersService {
         }
 
         this._selected$.next(player);
-        this._search$.next();
+        this._search$.next(undefined);
     }
 
     private updatePlayerWithRcon(rconPlayer: RconPlayer): MergedPlayer {

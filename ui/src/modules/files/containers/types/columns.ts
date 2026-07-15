@@ -10,6 +10,7 @@ import {Component} from '@angular/core';
 import { ITooltipAngularComp } from "ag-grid-angular";
 
 @Component({
+    standalone: false,
     selector: 'list-tooltip-component',
     template: `<div class="custom-tooltip" *ngIf="params.data">
                     <p *ngFor="let item of params.value">

@@ -79,6 +79,7 @@ export class REST extends IStatefulService {
         );
         this.express.post(
             '/fleet/agent',
+            /* istanbul ignore next */
             (req, res) => void this.handleFleetAgent(req, res),
         );
         this.express.use(

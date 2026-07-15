@@ -15,7 +15,7 @@
             </header>
 
             <div class="loading-state" *ngIf="loading">
-                <fa-icon [icon]='["fas", "spinner"]' [classes]="['fa-spin']"></fa-icon>
+                <fa-icon [icon]='["fas", "spinner"]' animation="spin"></fa-icon>
                 <span>Loading manager configuration...</span>
             </div>
 
@@ -65,7 +65,7 @@
                                     <div class="field-group">
                                         <label for="logLevel">Log level</label>
                                         <p class="field-help" id="logLevel-help">{{ schema.properties.loglevel.description }}</p>
-                                        <select class="form-control" id="logLevel" aria-describedby="logLevel-help"
+                                        <select class="form-select" id="logLevel" aria-describedby="logLevel-help"
                                                 [(ngModel)]="config.loglevel" name="logLevel">
                                             <option [ngValue]="0">DEBUG</option>
                                             <option [ngValue]="1">INFO</option>
@@ -85,7 +85,7 @@
                                 <div class="repeatable-block">
                                     <div class="repeatable-heading">
                                         <div><h4>Operators</h4><p class="field-help">Roles control access across the web UI, REST API, and Discord commands.</p></div>
-                                        <button type="button" class="btn btn-add" (click)="addAdmin()"><fa-icon class="mr-1" [icon]='["fas", "plus-circle"]'></fa-icon>Add operator</button>
+                                        <button type="button" class="btn btn-add" (click)="addAdmin()"><fa-icon class="me-1" [icon]='["fas", "plus-circle"]'></fa-icon>Add operator</button>
                                     </div>
                                     <div class="empty-state" *ngIf="config.admins.length === 0">No operators configured. Add an administrator before saving.</div>
                                     <div class="repeatable-row channel-row" *ngFor="let admin of config.admins; let idx = index">
@@ -95,7 +95,7 @@
                                         </div>
                                         <div class="field-group compact">
                                             <label [for]="'adminRole-' + idx">Role</label>
-                                            <select class="form-control" [id]="'adminRole-' + idx" [(ngModel)]="admin.userLevel" [ngModelOptions]="{standalone: true}">
+                                            <select class="form-select" [id]="'adminRole-' + idx" [(ngModel)]="admin.userLevel" [ngModelOptions]="{standalone: true}">
                                                 <option [ngValue]="'admin'">Administrator</option><option [ngValue]="'manage'">Manager</option><option [ngValue]="'moderate'">Moderator</option><option [ngValue]="'view'">Viewer</option>
                                             </select>
                                         </div>
@@ -113,7 +113,7 @@
                                 <label class="toggle-card" for="publishWebServer"><span><strong>Publish web server</strong><small>Listen on all network interfaces. Use only behind a secured reverse proxy.</small></span><span class="toggle-control"><input type="checkbox" id="publishWebServer" [(ngModel)]="config.publishWebServer" name="publishWebServer"><span class="toggle-track"></span></span></label>
                                 <label class="toggle-card" for="publishIngameApi"><span><strong>Publish in-game API</strong><small>Expose the in-game reporting endpoint to the network.</small></span><span class="toggle-control"><input type="checkbox" id="publishIngameApi" [(ngModel)]="config.publishIngameApi" name="publishIngameApi"><span class="toggle-track"></span></span></label>
                                 <div class="repeatable-block">
-                                    <div class="repeatable-heading"><div><h4>Remote fleet nodes</h4><p class="field-help">Register other manager instances using their signed agent endpoint.</p></div><button type="button" class="btn btn-add" (click)="addRemoteNode()"><fa-icon class="mr-1" [icon]='["fas", "plus-circle"]'></fa-icon>Add node</button></div>
+                                    <div class="repeatable-heading"><div><h4>Remote fleet nodes</h4><p class="field-help">Register other manager instances using their signed agent endpoint.</p></div><button type="button" class="btn btn-add" (click)="addRemoteNode()"><fa-icon class="me-1" [icon]='["fas", "plus-circle"]'></fa-icon>Add node</button></div>
                                     <div class="empty-state" *ngIf="config.remoteNodes.length === 0">No remote nodes configured.</div>
                                     <div class="repeatable-row mod-row" *ngFor="let node of config.remoteNodes; let idx = index">
                                         <div class="field-group compact"><label [for]="'nodeId-' + idx">Node ID</label><input class="form-control" [id]="'nodeId-' + idx" required [(ngModel)]="node.id" [ngModelOptions]="{standalone: true}"></div>
@@ -121,7 +121,7 @@
                                         <div class="field-group compact"><label [for]="'nodeEndpoint-' + idx">Agent endpoint</label><input type="url" class="form-control" [id]="'nodeEndpoint-' + idx" required placeholder="https://host:2313/fleet/agent" [(ngModel)]="node.endpoint" [ngModelOptions]="{standalone: true}"></div>
                                         <div class="field-group compact"><label [for]="'nodeSecret-' + idx">Shared secret <span class="secret-label">Secret</span></label><input type="password" class="form-control" [id]="'nodeSecret-' + idx" required autocomplete="new-password" [(ngModel)]="node.sharedSecret" [ngModelOptions]="{standalone: true}"></div>
                                         <div class="field-group compact"><label [for]="'nodeCapabilities-' + idx">Capabilities</label><input class="form-control" [id]="'nodeCapabilities-' + idx" [ngModel]="node.capabilities.join(', ')" (ngModelChange)="setNodeCapabilities(node, $event)" [ngModelOptions]="{standalone: true}" placeholder="* or comma-separated resources"></div>
-                                        <div class="field-group compact"><label [for]="'nodeAuthorization-' + idx">Maximum role</label><select class="form-control" [id]="'nodeAuthorization-' + idx" [(ngModel)]="node.authorizationLevel" [ngModelOptions]="{standalone: true}"><option [ngValue]="'view'">Viewer</option><option [ngValue]="'moderate'">Moderator</option><option [ngValue]="'manage'">Manager</option><option [ngValue]="'admin'">Administrator</option></select></div>
+                                        <div class="field-group compact"><label [for]="'nodeAuthorization-' + idx">Maximum role</label><select class="form-select" [id]="'nodeAuthorization-' + idx" [(ngModel)]="node.authorizationLevel" [ngModelOptions]="{standalone: true}"><option [ngValue]="'view'">Viewer</option><option [ngValue]="'moderate'">Moderator</option><option [ngValue]="'manage'">Manager</option><option [ngValue]="'admin'">Administrator</option></select></div>
                                         <button class="btn btn-icon btn-remove row-remove" type="button" aria-label="Delete remote node" (click)="config.remoteNodes.splice(idx, 1)"><fa-icon [icon]='["fas", "trash"]'></fa-icon></button>
                                     </div>
                                 </div>
@@ -149,7 +149,7 @@
                                             <p class="field-help">{{ schema.properties.discordChannels.description }}</p>
                                         </div>
                                         <button type="button" class="btn btn-add" (click)="addDiscordChannel()">
-                                            <fa-icon class="mr-1" [icon]='["fas", "plus-circle"]'></fa-icon>Add channel
+                                            <fa-icon class="me-1" [icon]='["fas", "plus-circle"]'></fa-icon>Add channel
                                         </button>
                                     </div>
                                     <div class="empty-state" *ngIf="getDiscordChannels().length === 0">No channels configured.</div>
@@ -161,8 +161,8 @@
                                         </div>
                                         <div class="mode-list">
                                             <div class="mode-row" *ngFor="let mode of chan.mode; let modeidx = index">
-                                                <label class="sr-only" [for]="'discordMode-' + idx + '-' + modeidx">Channel mode</label>
-                                                <select class="form-control" [id]="'discordMode-' + idx + '-' + modeidx"
+                                                <label class="visually-hidden" [for]="'discordMode-' + idx + '-' + modeidx">Channel mode</label>
+                                                <select class="form-select" [id]="'discordMode-' + idx + '-' + modeidx"
                                                         [(ngModel)]="chan.mode[modeidx]" [ngModelOptions]="{standalone: true}">
                                                     <option [ngValue]="'admin'">Admin</option>
                                                     <option [ngValue]="'rcon'">RCon</option>
@@ -260,7 +260,7 @@
                                     <div class="repeatable-heading">
                                         <div><h4>Steam Workshop mods</h4><p class="field-help">{{ schema.properties.steamWsMods.description }}</p></div>
                                         <button type="button" class="btn btn-add" (click)="addWorkshopMod()">
-                                            <fa-icon class="mr-1" [icon]='["fas", "plus-circle"]'></fa-icon>Add mod
+                                            <fa-icon class="me-1" [icon]='["fas", "plus-circle"]'></fa-icon>Add mod
                                         </button>
                                     </div>
                                     <div class="empty-state" *ngIf="config.steamWsMods.length === 0">No Workshop mods configured.</div>
@@ -298,12 +298,12 @@
                                     <div class="repeatable-heading">
                                         <div><h4>Local mods</h4><p class="field-help">{{ schema.properties.localMods.description }}</p></div>
                                         <button type="button" class="btn btn-add" (click)="config.localMods.push('')">
-                                            <fa-icon class="mr-1" [icon]='["fas", "plus-circle"]'></fa-icon>Add path
+                                            <fa-icon class="me-1" [icon]='["fas", "plus-circle"]'></fa-icon>Add path
                                         </button>
                                     </div>
                                     <div class="empty-state" *ngIf="config.localMods.length === 0">No local mod paths configured.</div>
                                     <div class="repeatable-row simple-row" *ngFor="let mod of config.localMods; let idx = index">
-                                        <label class="sr-only" [for]="'localMod-' + idx">Local mod path</label>
+                                        <label class="visually-hidden" [for]="'localMod-' + idx">Local mod path</label>
                                         <input type="text" class="form-control" [id]="'localMod-' + idx"
                                                [(ngModel)]="config.localMods[idx]" [ngModelOptions]="{standalone: true}">
                                         <button class="btn btn-icon btn-remove" type="button" aria-label="Delete local mod path"
@@ -316,12 +316,12 @@
                                     <div class="repeatable-heading">
                                         <div><h4>Server mods</h4><p class="field-help">{{ schema.properties.serverMods.description }}</p></div>
                                         <button type="button" class="btn btn-add" (click)="config.serverMods.push('')">
-                                            <fa-icon class="mr-1" [icon]='["fas", "plus-circle"]'></fa-icon>Add path
+                                            <fa-icon class="me-1" [icon]='["fas", "plus-circle"]'></fa-icon>Add path
                                         </button>
                                     </div>
                                     <div class="empty-state" *ngIf="config.serverMods.length === 0">No server mod paths configured.</div>
                                     <div class="repeatable-row simple-row" *ngFor="let mod of config.serverMods; let idx = index">
-                                        <label class="sr-only" [for]="'serverMod-' + idx">Server mod path</label>
+                                        <label class="visually-hidden" [for]="'serverMod-' + idx">Server mod path</label>
                                         <input type="text" class="form-control" [id]="'serverMod-' + idx"
                                                [(ngModel)]="config.serverMods[idx]" [ngModelOptions]="{standalone: true}">
                                         <button class="btn btn-icon btn-remove" type="button" aria-label="Delete server mod path"
@@ -419,21 +419,21 @@
                                     <div><h3>Automation</h3><p>Schedule server actions, configure lifecycle hooks, and tune metrics retention.</p></div>
                                 </div>
                                 <div class="repeatable-block">
-                                    <div class="repeatable-heading"><div><h4>Scheduled events</h4><p class="field-help">Cron expressions use the manager host's local time.</p></div><button type="button" class="btn btn-add" (click)="addEvent()"><fa-icon class="mr-1" [icon]='["fas", "plus-circle"]'></fa-icon>Add event</button></div>
+                                    <div class="repeatable-heading"><div><h4>Scheduled events</h4><p class="field-help">Cron expressions use the manager host's local time.</p></div><button type="button" class="btn btn-add" (click)="addEvent()"><fa-icon class="me-1" [icon]='["fas", "plus-circle"]'></fa-icon>Add event</button></div>
                                     <div class="empty-state" *ngIf="config.events.length === 0">No scheduled events configured.</div>
                                     <div class="repeatable-row mod-row" *ngFor="let event of config.events; let idx = index">
                                         <div class="field-group compact"><label [for]="'eventName-' + idx">Name</label><input class="form-control" [id]="'eventName-' + idx" required [(ngModel)]="event.name" [ngModelOptions]="{standalone: true}"></div>
-                                        <div class="field-group compact"><label [for]="'eventType-' + idx">Action</label><select class="form-control" [id]="'eventType-' + idx" [(ngModel)]="event.type" [ngModelOptions]="{standalone: true}"><option [ngValue]="'restart'">Restart</option><option [ngValue]="'message'">Message</option><option [ngValue]="'kickAll'">Kick all</option><option [ngValue]="'lock'">Lock</option><option [ngValue]="'unlock'">Unlock</option><option [ngValue]="'backup'">Backup</option></select></div>
+                                        <div class="field-group compact"><label [for]="'eventType-' + idx">Action</label><select class="form-select" [id]="'eventType-' + idx" [(ngModel)]="event.type" [ngModelOptions]="{standalone: true}"><option [ngValue]="'restart'">Restart</option><option [ngValue]="'message'">Message</option><option [ngValue]="'kickAll'">Kick all</option><option [ngValue]="'lock'">Lock</option><option [ngValue]="'unlock'">Unlock</option><option [ngValue]="'backup'">Backup</option></select></div>
                                         <div class="field-group compact"><label [for]="'eventCron-' + idx">Cron</label><input class="form-control" [id]="'eventCron-' + idx" required placeholder="0 */4 * * *" [(ngModel)]="event.cron" [ngModelOptions]="{standalone: true}"></div>
                                         <div class="field-group compact"><label [for]="'eventParams-' + idx">Parameters</label><input class="form-control" [id]="'eventParams-' + idx" [ngModel]="event.params?.join(', ')" (ngModelChange)="setEventParams(event, $event)" [ngModelOptions]="{standalone: true}" placeholder="Comma-separated values"></div>
                                         <button class="btn btn-icon btn-remove row-remove" type="button" aria-label="Delete event" (click)="config.events.splice(idx, 1)"><fa-icon [icon]='["fas", "trash"]'></fa-icon></button>
                                     </div>
                                 </div>
                                 <div class="repeatable-block">
-                                    <div class="repeatable-heading"><div><h4>Lifecycle hooks</h4><p class="field-help">Run trusted local programs at defined lifecycle points.</p></div><button type="button" class="btn btn-add" (click)="addHook()"><fa-icon class="mr-1" [icon]='["fas", "plus-circle"]'></fa-icon>Add hook</button></div>
+                                    <div class="repeatable-heading"><div><h4>Lifecycle hooks</h4><p class="field-help">Run trusted local programs at defined lifecycle points.</p></div><button type="button" class="btn btn-add" (click)="addHook()"><fa-icon class="me-1" [icon]='["fas", "plus-circle"]'></fa-icon>Add hook</button></div>
                                     <div class="empty-state" *ngIf="config.hooks.length === 0">No lifecycle hooks configured.</div>
                                     <div class="repeatable-row mod-row" *ngFor="let hook of config.hooks; let idx = index">
-                                        <div class="field-group compact"><label [for]="'hookType-' + idx">Trigger</label><select class="form-control" [id]="'hookType-' + idx" [(ngModel)]="hook.type" [ngModelOptions]="{standalone: true}"><option [ngValue]="'beforeStart'">Before start</option><option [ngValue]="'afterStart'">After start</option><option [ngValue]="'missionChanged'">Mission changed</option></select></div>
+                                        <div class="field-group compact"><label [for]="'hookType-' + idx">Trigger</label><select class="form-select" [id]="'hookType-' + idx" [(ngModel)]="hook.type" [ngModelOptions]="{standalone: true}"><option [ngValue]="'beforeStart'">Before start</option><option [ngValue]="'afterStart'">After start</option><option [ngValue]="'missionChanged'">Mission changed</option></select></div>
                                         <div class="field-group compact"><label [for]="'hookProgram-' + idx">Program</label><input class="form-control" [id]="'hookProgram-' + idx" required [(ngModel)]="hook.program" [ngModelOptions]="{standalone: true}"></div>
                                         <div class="field-group compact"><label [for]="'hookParams-' + idx">Parameters</label><input class="form-control" [id]="'hookParams-' + idx" [ngModel]="hook.params?.join(', ')" (ngModelChange)="setHookParams(hook, $event)" [ngModelOptions]="{standalone: true}" placeholder="Comma-separated values"></div>
                                         <button class="btn btn-icon btn-remove row-remove" type="button" aria-label="Delete hook" (click)="config.hooks.splice(idx, 1)"><fa-icon [icon]='["fas", "trash"]'></fa-icon></button>
@@ -456,7 +456,7 @@
                                             <label [for]="'cfg-' + prop.name">{{ prop.name }}</label>
                                             <button *ngIf="prop.custom" type="button" class="btn btn-text-danger"
                                                     (click)="removeCustomServerCfgEntry(prop)">
-                                                <fa-icon class="mr-1" [icon]='["fas", "trash"]'></fa-icon>Delete
+                                                <fa-icon class="me-1" [icon]='["fas", "trash"]'></fa-icon>Delete
                                             </button>
                                         </div>
                                         <p class="field-help" *ngIf="prop.description">{{ prop.description }}</p>
@@ -466,7 +466,7 @@
                                         <input *ngIf="!prop.enum && prop.type === 'number'" type="number" class="form-control"
                                                [id]="'cfg-' + prop.name" [(ngModel)]="config.serverCfg[prop.name]"
                                                [ngModelOptions]="{standalone: true}">
-                                        <select *ngIf="prop.enum" class="form-control" [id]="'cfg-' + prop.name"
+                                        <select *ngIf="prop.enum" class="form-select" [id]="'cfg-' + prop.name"
                                                 [(ngModel)]="config.serverCfg[prop.name]" [ngModelOptions]="{standalone: true}">
                                             <option *ngFor="let opt of prop.enum" [ngValue]="opt">{{ opt }}</option>
                                         </select>

@@ -7,6 +7,7 @@ import { AppCommonService } from '../../../../modules/app-common/services/app-co
 import { FleetContextService } from '../../../app-common/services/fleet-context.service';
 
 @Component({
+    standalone: false,
     selector: 'sb-top-nav',
     templateUrl: './top-nav.component.html',
     styleUrls: ['top-nav.component.scss'],

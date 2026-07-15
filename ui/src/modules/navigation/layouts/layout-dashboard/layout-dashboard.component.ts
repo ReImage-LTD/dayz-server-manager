@@ -11,6 +11,7 @@ import { Subscription } from 'rxjs';
 import { sideNavItems, sideNavSections } from '../../data/side-nav.data';
 
 @Component({
+    standalone: false,
     selector: 'sb-layout-dashboard',
     templateUrl: './layout-dashboard.component.html',
     styleUrls: ['layout-dashboard.component.scss'],

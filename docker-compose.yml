@@ -1,8 +1,6 @@
-version: "3.8"
-
 services:
   dayz:
-    build: ghcr.io/mr-guard/dayz-server-manager:latest
+    image: ghcr.io/mr-guard/dayz-server-manager:latest
     ports:
       - "2302-2312:2302-2312"
       - "8766:8766"

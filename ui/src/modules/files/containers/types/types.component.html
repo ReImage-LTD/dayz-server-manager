@@ -204,7 +204,7 @@
                                    placeholder="Value"
                                    aria-label="Bulk operation value"
                             >
-                            <select class="custom-select"
+                            <select class="form-select"
                                     aria-label="Attribute to change"
                                     [(ngModel)]="selectedOpertaionCol"
                                     (ngModelChange)="selectedOpertaion = undefined"
@@ -219,7 +219,7 @@
                                     {{ item.colId }}
                                 </option>
                             </select>
-                            <select class="custom-select"
+                            <select class="form-select"
                                     aria-label="Operation to execute"
                                     [disabled]="!selectedOpertaionCol"
                                     [(ngModel)]="selectedOpertaion"
@@ -294,7 +294,7 @@
                                     [disabled]="!configForm.form.valid || submitting"
                                     title="Validate and save all changes"
                             >
-                                <fa-icon *ngIf="submitting" [icon]='["fas", "spinner"]' [classes]="['fa-spin']"></fa-icon>
+                                <fa-icon *ngIf="submitting" [icon]='["fas", "spinner"]' animation="spin"></fa-icon>
                                 {{ submitting ? 'Saving...' : 'Submit changes' }}
                             </button>
                             <button type="button"
@@ -312,7 +312,7 @@
         </div>
 
         <div class="card-body workbench-loading" *ngIf="loading" role="status" aria-live="polite">
-            <fa-icon [icon]='["fas", "spinner"]' [classes]="['fa-spin']" aria-hidden="true"></fa-icon>
+            <fa-icon [icon]='["fas", "spinner"]' animation="spin" aria-hidden="true"></fa-icon>
             <span>Loading configuration files...</span>
         </div>
     </sb-card>

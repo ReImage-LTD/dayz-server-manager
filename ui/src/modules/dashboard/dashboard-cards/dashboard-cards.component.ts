@@ -5,6 +5,7 @@ import { map } from 'rxjs/operators';
 import { ApiFetcher, AppCommonService } from '../../app-common/services/app-common.service';
 
 @Component({
+    standalone: false,
     selector: 'sb-dashboard-cards',
     templateUrl: './dashboard-cards.component.html',
     styleUrls: ['dashboard-cards.component.scss'],

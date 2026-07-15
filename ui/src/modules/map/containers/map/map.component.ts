@@ -22,7 +22,7 @@ import {
     Tooltip,
     imageOverlay,
 } from 'leaflet';
-import { Subject } from 'rxjs';
+import { firstValueFrom, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 export interface Location {
@@ -86,13 +86,14 @@ export class LayerContainer {
 }
 
 @Component({
+    standalone: false,
     selector: 'sb-map',
     templateUrl: './map.component.html',
     styleUrls: ['map.component.scss'],
 })
 export class MapComponent implements OnInit, OnDestroy {
 
-    protected onDestroy = new Subject();
+    protected onDestroy = new Subject<void>();
 
     public info?: MapInfo;
     public options?: MapOptions;
@@ -124,7 +125,7 @@ export class MapComponent implements OnInit, OnDestroy {
 
     public ngOnDestroy(): void {
         if (!this.onDestroy.closed) {
-            this.onDestroy.next();
+            this.onDestroy.next(undefined);
             this.onDestroy.complete();
         }
     }
@@ -146,7 +147,7 @@ export class MapComponent implements OnInit, OnDestroy {
                 },
             );
 
-        this.appCommon.fetchServerInfo().toPromise().then();
+        void firstValueFrom(this.appCommon.fetchServerInfo());
     }
 
     protected createBaseLayers(): void {
@@ -193,9 +194,9 @@ export class MapComponent implements OnInit, OnDestroy {
 
         if (typeof this.mapHost === 'string') {
             const urlBase = `${this.mapHost}/${this.mapName}`;
-            this.info = (await this.http.get(
+            this.info = await firstValueFrom(this.http.get<MapInfo>(
                 `${urlBase}/data.json`,
-            ).toPromise()) as MapInfo;
+            ));
         } else {
             this.info = this.mapHost as MapInfo;
         }

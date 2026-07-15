@@ -585,6 +585,9 @@ describe('Test Interface', () => {
     });
 
     it('execute-backup', async () => {
+        const operation = { id: 'backup-operation', status: 'queued' } as any;
+        operations.createOperation.returns(operation);
+        backups.createBackup.resolves({ id: 'backup-id' } as any);
         const handler = injector.resolve(Interface);
         const request = {
             resource: 'backup',
@@ -624,6 +627,63 @@ describe('Test Interface', () => {
         expect(operations.createOperation.calledWith('backup.create', 'missions')).to.be.true;
         expect(nodesResponse.status).to.equal(200);
         expect(nodeRegistry.list.called).to.be.true;
+    });
+
+    it('exposes config documents, validation, operations, and fleet health', async () => {
+        configFileHelper.getRevisionedConfig.returns({ config: '{}', revision: 'revision' });
+        configFileHelper.validateConfigContent.returns([]);
+        operations.listOperations.returns([]);
+        operations.getOperation.returns({ id: 'operation-id' } as any);
+        const handler = injector.resolve(Interface);
+
+        expect((await handler.execute({ resource: 'configdocument', user: 'admin' } as Request)).status).to.equal(200);
+        expect((await handler.execute({
+            resource: 'validateconfig',
+            user: 'admin',
+            body: { config: '{}' },
+        } as Request)).body).to.deep.equal({ valid: true, errors: [] });
+        expect((await handler.execute({ resource: 'operations', user: 'admin', query: {} } as Request)).status).to.equal(200);
+        expect((await handler.execute({
+            resource: 'operation',
+            user: 'admin',
+            query: { id: 'operation-id' },
+        } as Request)).status).to.equal(200);
+        expect((await handler.executeFleetCommand({
+            resource: 'fleethealth',
+            method: 'get',
+            authorizationLevel: 'view',
+            requestedBy: 'admin',
+        }, 'remote')).status).to.equal(200);
+    });
+
+    it('runs restore operations and local fleet dispatches', async () => {
+        const operation = { id: 'restore-operation', status: 'queued' } as any;
+        operations.createOperation.returns(operation);
+        serverDetector.isServerRunning.resolves(false);
+        backups.restoreBackup.resolves();
+        manager.getUserLevel.returns('view');
+        manager.getServerInfo.returns({ name: 'local' } as any);
+        fleetDispatcher.dispatch.callsFake(async (_node, _command, local) => local({
+            resource: 'serverinfo',
+            method: 'get',
+            authorizationLevel: 'view',
+            requestedBy: 'admin',
+        }));
+        const handler = injector.resolve(Interface);
+
+        expect((await handler.execute({
+            resource: 'restorebackup',
+            user: 'admin',
+            body: { id: 'backup-id' },
+        } as Request)).status).to.equal(200);
+        await new Promise((resolve) => setImmediate(resolve));
+        expect(backups.restoreBackup.calledWith('backup-id')).to.be.true;
+
+        expect((await handler.execute({
+            resource: 'fleetdispatch',
+            user: 'admin',
+            body: { nodeId: 'local', resource: 'serverinfo' },
+        } as Request)).status).to.equal(200);
     });
 
     it('redacts config bodies from audit metrics', async () => {
@@ -719,6 +779,7 @@ describe('Test Interface', () => {
     it('guards restore, preserves the restart lock, and optionally creates a backup', async () => {
         serverDetector.isServerRunning.resolves(false);
         monitor.killServer.resolves(true);
+        monitor.startServer.resolves(true);
         monitor.restartLock = true;
         backups.createBackup.resolves({ id: 'pre-restore' } as any);
         backups.restoreBackup.resolves();

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
+    standalone: false,
     selector: 'sb-logs',
     templateUrl: './logs.component.html',
     styleUrls: ['logs.component.scss'],

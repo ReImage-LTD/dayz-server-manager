@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 
 @Component({
+    standalone: false,
     selector: 'sb-footer',
     templateUrl: './footer.component.html',
     styleUrls: ['footer.component.scss'],

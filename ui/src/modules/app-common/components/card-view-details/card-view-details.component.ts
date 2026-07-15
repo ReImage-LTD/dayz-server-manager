@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
+    standalone: false,
     selector: 'sb-card-view-details',
     templateUrl: './card-view-details.component.html',
     styleUrls: ['card-view-details.component.scss'],

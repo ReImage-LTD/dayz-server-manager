@@ -13,8 +13,10 @@ import 'leaflet.markercluster';
 import { LayerContainer, LayerIds, MapComponent } from './map.component';
 import { EventSpawnsFileWrapper, FileWrapper, MapGroupPosFileWrapper } from 'src/modules/files/containers/types/files';
 import { EventSpawn, EventSpawnPos, EventSpawnsXml, MapGroupPosXml } from 'src/modules/files/containers/types/types';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
+    standalone: false,
     selector: 'sb-map-loot',
     templateUrl: './map-loot.component.html',
     styleUrls: ['map.component.scss'],
@@ -70,7 +72,7 @@ export class MapLootComponent extends MapComponent implements OnInit, OnDestroy 
         // eventspawns
         try {
             const eventSpawns = new EventSpawnsFileWrapper('cfgeventspawns.xml');
-            await eventSpawns.parse(await this.appCommon.fetchMissionFile(eventSpawns.file).toPromise());
+            await eventSpawns.parse(await firstValueFrom(this.appCommon.fetchMissionFile(eventSpawns.file)));
             this.files.push(eventSpawns);
 
             this.updateEvents(eventSpawns.content);
@@ -85,7 +87,7 @@ export class MapLootComponent extends MapComponent implements OnInit, OnDestroy 
         // mapo grp pos
         try {
             const mapGrpPos = new MapGroupPosFileWrapper('mapgrouppos.xml');
-            await mapGrpPos.parse(await this.appCommon.fetchMissionFile(mapGrpPos.file).toPromise());
+            await mapGrpPos.parse(await firstValueFrom(this.appCommon.fetchMissionFile(mapGrpPos.file)));
             this.files.push(mapGrpPos);
 
             this.updateMapGrpPos(mapGrpPos.content);
@@ -256,17 +258,17 @@ export class MapLootComponent extends MapComponent implements OnInit, OnDestroy 
             if (file.skipSave) continue;
             const fileContent = file.strinigfy();
             if (file.location === 'mission') {
-                await this.appCommon.updateMissionFile(
+                await firstValueFrom(this.appCommon.updateMissionFile(
                     file.file,
                     fileContent,
                     this.withBackup,
-                ).toPromise();
+                ));
             } else {
-                await this.appCommon.updateProfileFile(
+                await firstValueFrom(this.appCommon.updateProfileFile(
                     (file as any).file, // TODO remove when profile files get saveable
                     fileContent,
                     this.withBackup,
-                ).toPromise();
+                ));
             }
         }
     }

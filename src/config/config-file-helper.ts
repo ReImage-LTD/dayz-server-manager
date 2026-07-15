@@ -145,7 +145,7 @@ export class ConfigFileHelper extends IService {
     }
 
     private mergeConfig(newConfig: string): Config {
-        const current = this.readConfig() || commentJson.parse(generateConfigTemplate(configschema)) as any as Config;
+        const current = this.readConfig() || commentJson.parse(generateConfigTemplate(configschema, new Config())) as any as Config;
         const incoming = commentJson.parse(newConfig) as any as Config;
         for (const remote of incoming.remoteNodes || []) {
             if (remote.sharedSecret === ConfigFileHelper.REDACTED_SECRET) {
@@ -204,7 +204,7 @@ export class ConfigFileHelper extends IService {
         const cfgPath = this.getConfigFilePath();
 
         if (!this.fs.existsSync(cfgPath)) {
-            const defaultConfig = commentJson.parse(generateConfigTemplate(configschema)) as any as Config;
+            const defaultConfig = commentJson.parse(generateConfigTemplate(configschema, new Config())) as any as Config;
 
             // apply safe defaults
             defaultConfig.admins[0].password = randomUUID();

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
+    standalone: false,
     selector: 'sb-layout-error',
     templateUrl: './layout-error.component.html',
     styleUrls: ['layout-error.component.scss'],

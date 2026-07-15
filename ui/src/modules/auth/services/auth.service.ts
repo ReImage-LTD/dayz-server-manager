@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { UserLevel } from '../../app-common/models';
 
 @Injectable({ providedIn: 'root' })
@@ -52,7 +53,7 @@ export class AuthService {
     }
 
     private async validateLogin(auth: string, remember?: boolean): Promise<void> {
-        const resp = await this.httpClient.post(
+        const resp = await firstValueFrom(this.httpClient.post(
             `/api/login`,
             null,
             {
@@ -63,7 +64,7 @@ export class AuthService {
                 observe: 'response',
                 responseType: 'text',
             },
-        ).toPromise();
+        ));
 
         if (!resp.ok) {
             throw new Error('Login failed');

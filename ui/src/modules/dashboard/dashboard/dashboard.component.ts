@@ -5,6 +5,7 @@ import { takeUntil } from 'rxjs/operators';
 import { AppCommonService } from '../../app-common/services/app-common.service';
 
 @Component({
+    standalone: false,
     selector: 'sb-dashboard',
     templateUrl: './dashboard.component.html',
     styleUrls: ['dashboard.component.scss'],
@@ -21,7 +22,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     public ngOnDestroy(): void {
         if (this.componentDestroy) {
-            this.componentDestroy.next();
+            this.componentDestroy.next(undefined);
             this.componentDestroy.complete();
             this.componentDestroy = undefined;
         }

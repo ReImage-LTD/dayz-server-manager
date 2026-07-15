@@ -63,7 +63,7 @@
             [pageSize]="auditService.pageSize" [maxSize]="5" aria-label="Audit result pages"></ngb-pagination>
         <label class="page-size-control">
             <span>Rows</span>
-            <select class="custom-select" name="pageSize" [(ngModel)]="auditService.pageSize">
+            <select class="form-select" name="pageSize" [(ngModel)]="auditService.pageSize">
                 <option [ngValue]="10">10</option>
                 <option [ngValue]="20">20</option>
                 <option [ngValue]="MAX_ITEMS">All</option>

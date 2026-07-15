@@ -126,7 +126,7 @@ export const validateConfig = (config: Config): string[] => {
         } catch (_) {
             errors.push(`Remote node (${remote.id}) has an invalid endpoint`);
         }
-        if (!Object.keys(UserLevelEnum).includes(remote.authorizationLevel)) {
+        if (remote.authorizationLevel && !Object.keys(UserLevelEnum).includes(remote.authorizationLevel)) {
             errors.push(`Remote node (${remote.id}) has an invalid authorization level`);
         }
     }
