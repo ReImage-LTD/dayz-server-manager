@@ -40,7 +40,7 @@ jobs:
       - name: Test backend
         run: npm test | tee test-output.log; test ${PIPESTATUS[0]} -eq 0
       - name: Prepare coverage badge
-        if: contains('refs/heads/master refs/heads/experimental', github.ref)
+        if: github.repository == 'mr-guard/dayz-server-manager' && contains('refs/heads/master refs/heads/experimental', github.ref)
         run: |
           SUMMARY="$(tail -3 test-output.log | head -1)"
           TOKENS=($SUMMARY)
@@ -51,7 +51,7 @@ jobs:
           echo "BRANCH=${BRANCH_NAME}" >> "$GITHUB_ENV"
       - name: Create coverage badge
         uses: schneegans/dynamic-badges-action@v1.7.0
-        if: contains('refs/heads/master refs/heads/experimental', github.ref)
+        if: github.repository == 'mr-guard/dayz-server-manager' && contains('refs/heads/master refs/heads/experimental', github.ref)
         with:
           auth: ${{ secrets.GIST_SECRET }}
           gistID: 442a5cdea03dd79a87b34339a7a16a2c
@@ -136,7 +136,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install native build tools
-        run: sudo apt-get update && sudo apt-get install -y build-essential python3 zip
+        run: sudo apt-get update && sudo apt-get install -y build-essential libvorbisenc2 python3 zip
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -144,8 +144,16 @@ jobs:
           cache: npm
       - name: Use npm 11
         run: npm install --global npm@${{ env.NPM_VERSION }}
-      - name: Download Mikero tools
-        uses: arma-actions/mikero-tools@latest
+      - name: Install Mikero tools
+        run: |
+          curl --fail --location --silent --show-error \
+            https://raw.githubusercontent.com/arma-actions/mikero-tools/c5fd83d23121f25ad0ee9b7af274f676f3a56a94/linux/depbo-tools-0.9.62-linux-amd64.tar \
+            --output "$RUNNER_TEMP/mikero-tools.tar"
+          echo "a285eabab4ac69bc84ae8c243fcc6f66f12e9430a5e1163a05c6381b02e6db48  $RUNNER_TEMP/mikero-tools.tar" | sha256sum --check
+          sudo mkdir -p /opt/mikero-tools
+          sudo tar -xf "$RUNNER_TEMP/mikero-tools.tar" --strip-components=1 -C /opt/mikero-tools
+          echo "/opt/mikero-tools/bin" >> "$GITHUB_PATH"
+          echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-}:/opt/mikero-tools/lib" >> "$GITHUB_ENV"
       - name: Install dependencies
         run: npm ci
       - name: Set version
