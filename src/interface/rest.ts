@@ -17,6 +17,9 @@ import { InternalEventTypes } from '../types/events';
 import { Listener } from 'eventemitter2';
 import { WebsocketCommand, WebsocketListenerEvent, WebsocketListenerType, WebsocketMessage } from '../types/websocket';
 import { Interface } from './interface';
+import { NodeRegistry } from '../services/node-registry';
+import { RemoteNodeClient } from '../services/remote-node-client';
+import { SignedFleetCommandEnvelope } from '../types/fleet';
 
 @singleton()
 @injectable()
@@ -40,6 +43,8 @@ export class REST extends IStatefulService {
         private manager: Manager,
         private eventBus: EventBus,
         private eventInterface: Interface,
+        private nodeRegistry: NodeRegistry,
+        private remoteNodeClient: RemoteNodeClient,
     ) {
         super(loggerFactory.createLogger('REST'));
     }
@@ -71,6 +76,10 @@ export class REST extends IStatefulService {
             '/version',
             /* istanbul ignore next */
             (req, res) => res.send(this.manager.APP_VERSION),
+        );
+        this.express.post(
+            '/fleet/agent',
+            (req, res) => void this.handleFleetAgent(req, res),
         );
         this.express.use(
             '/api',
@@ -158,6 +167,8 @@ export class REST extends IStatefulService {
             eventType = InternalEventTypes.LOG_ENTRY;
         } else if (listenerType === WebsocketListenerType.METRICS) {
             eventType = InternalEventTypes.METRIC_ENTRY;
+        } else if (listenerType === WebsocketListenerType.OPERATIONS) {
+            eventType = InternalEventTypes.OPERATION_UPDATED;
         } else {
             this.log.log(LogLevel.INFO, 'Received unknown websocket listener type', listenerType);
             return;
@@ -322,6 +333,43 @@ export class REST extends IStatefulService {
                     );
                 },
             );
+        }
+    }
+
+    private async handleFleetAgent(req: express.Request, res: express.Response): Promise<void> {
+        const envelope = req.body as SignedFleetCommandEnvelope;
+        const source = envelope?.sourceNodeId ? this.nodeRegistry.get(envelope.sourceNodeId) : undefined;
+        if (!source || source.descriptor.type !== 'remote') {
+            res.status(401).send('Invalid fleet command');
+            return;
+        }
+        const sourceDescriptor = source.descriptor;
+
+        try {
+            const response = await this.remoteNodeClient.handleEnvelope(
+                envelope,
+                this.nodeRegistry.getRemoteSecret(envelope.sourceNodeId),
+                (command) => {
+                    if (command.resource !== 'fleethealth'
+                        && !sourceDescriptor.capabilities.includes('*')
+                        && !sourceDescriptor.capabilities.includes(command.resource)) {
+                        return Promise.resolve(new Response(401, 'Fleet node capability is not authorized'));
+                    }
+                    const levels = ['admin', 'manage', 'moderate', 'view'];
+                    if (levels.indexOf(command.authorizationLevel)
+                        < levels.indexOf(sourceDescriptor.authorizationLevel || 'view')) {
+                        return Promise.resolve(new Response(401, 'Fleet node authorization level is not authorized'));
+                    }
+                    return this.eventInterface.executeFleetCommand(command, envelope.sourceNodeId);
+                },
+                Date.now(),
+                String(this.manager.config.instanceId),
+            );
+            this.nodeRegistry.setOnline(envelope.sourceNodeId, true);
+            res.status(200).send(response);
+        } catch (error) {
+            this.log.log(LogLevel.WARN, 'Rejected fleet agent request', error);
+            res.status(401).send('Invalid fleet command');
         }
     }
 

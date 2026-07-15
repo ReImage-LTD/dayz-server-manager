@@ -30,6 +30,8 @@ import { IngameREST } from '../interface/ingame-rest';
 import { SyberiaCompat } from '../services/syberia-compat';
 import { DiscordEventConverter } from '../services/discord-event-converter';
 import { ConfigFileHelper } from '../config/config-file-helper';
+import { Operations } from '../services/operations';
+import { NodeRegistry } from '../services/node-registry';
 
 @singleton()
 @registry([
@@ -86,6 +88,11 @@ import { ConfigFileHelper } from '../config/config-file-helper';
     useClass: MetricsCollector,
     options: { lifecycle: Lifecycle.Singleton },
     },
+    {
+    token: Operations,
+    useClass: Operations,
+    options: { lifecycle: Lifecycle.Singleton },
+    },
 
     // interfaces
     {
@@ -140,6 +147,7 @@ export class ManagerController {
         private discord: DiscordBot,
         private discordEvents: DiscordEventConverter,
         private configFileHelper: ConfigFileHelper,
+        private nodeRegistry: NodeRegistry,
     ) {
         this.log = loggerFactory.createLogger('Bootstrap');
     }
@@ -219,6 +227,26 @@ export class ManagerController {
         );
 
         this.manager.config = config;
+        const localNodeId = String(config.instanceId);
+        for (const node of this.nodeRegistry.list()) {
+            this.nodeRegistry.remove(node.descriptor.id);
+        }
+        this.nodeRegistry.registerLocal({
+            id: localNodeId,
+            name: localNodeId,
+            type: 'local',
+            capabilities: ['*'],
+        });
+        for (const remote of config.remoteNodes || []) {
+            this.nodeRegistry.registerRemote({
+                id: remote.id,
+                name: remote.name || remote.id,
+                type: 'remote',
+                endpoint: remote.endpoint,
+                capabilities: [...remote.capabilities],
+                authorizationLevel: remote.authorizationLevel,
+            }, remote.sharedSecret);
+        }
 
         // apply initial log level
         const { loglevel } = config;

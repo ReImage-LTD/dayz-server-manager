@@ -84,4 +84,22 @@ describe('Test class Backups', () => {
 
     });
 
+    it('lists safely and restores through staging', async () => {
+        fs.mkdirSync('/test/backups/mpmissions_0123456789abcdef', { recursive: true });
+        fs.writeFileSync('/test/backups/mpmissions_0123456789abcdef/restored.txt', 'restored');
+        fs.mkdirSync('/test/testserver/mpmissions', { recursive: true });
+        fs.writeFileSync('/test/testserver/mpmissions/old.txt', 'old');
+        paths.setCwd('/test');
+        manager.config = { backupPath: '/test/backups', backupMaxAge: 1 } as any;
+        manager.getServerPath.returns('/test/testserver');
+        const backup = injector.resolve(Backups);
+
+        expect(await backup.getBackups()).to.have.length(1);
+        await backup.restoreBackup('mpmissions_0123456789abcdef');
+
+        expect(fs.existsSync('/test/testserver/mpmissions/restored.txt')).to.be.true;
+        expect(fs.existsSync('/test/testserver/mpmissions/old.txt')).to.be.false;
+        await expect(backup.restoreBackup('../unsafe')).to.be.rejectedWith('Invalid backup id');
+    });
+
 });

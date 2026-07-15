@@ -12,6 +12,7 @@ export enum WebsocketCommand {
 export enum WebsocketListenerType {
     LOGS = 'logs',
     METRICS = 'metrics',
+    OPERATIONS = 'operations',
 }
 
 export interface WebsocketListenerEvent {

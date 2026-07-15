@@ -1,1 +1,34 @@
 @import 'styles/variables.scss';
+
+.ops-footer {
+    border-top: 1px solid var(--ops-border, #2c3832);
+    background: var(--ops-bg-elevated, #111614);
+}
+
+.ops-footer .container-fluid {
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+}
+
+.footer-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.footer-status {
+    display: inline-block;
+    width: 0.4rem;
+    height: 0.4rem;
+    margin-right: 0.4rem;
+    background: var(--ops-accent, #a8bd76);
+    border-radius: 50%;
+}
+
+@media (max-width: 575.98px) {
+    .footer-content {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

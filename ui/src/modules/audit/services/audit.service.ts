@@ -33,9 +33,12 @@ const sort = (audits: AuditEvent[], column: 'timestamp', direction: string): Aud
 };
 
 const matches = (audit: AuditEvent, term: string): boolean => {
+    const normalizedTerm = term.toLowerCase();
     return (
-        audit.user?.toLowerCase()?.includes(term.toLowerCase())
-        || audit.value?.resource?.toLowerCase()?.includes(term.toLowerCase())
+        audit.user?.toLowerCase()?.includes(normalizedTerm)
+        || audit.value?.resource?.toLowerCase()?.includes(normalizedTerm)
+        || audit.value?.accept?.toLowerCase()?.includes(normalizedTerm)
+        || (JSON.stringify(audit.value?.body || '') || '').toLowerCase().includes(normalizedTerm)
     );
 };
 
@@ -119,7 +122,7 @@ export class AuditService {
     }
 
     public set pageSize(pageSize: number) {
-        this._set({ pageSize });
+        this._set({ pageSize, page: 1 });
     }
 
     public get searchTerm(): string {
@@ -127,7 +130,7 @@ export class AuditService {
     }
 
     public set searchTerm(searchTerm: string) {
-        this._set({ searchTerm });
+        this._set({ searchTerm, page: 1 });
     }
 
     // eslint-disable-next-line accessor-pairs

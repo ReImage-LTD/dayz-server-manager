@@ -1,52 +1,73 @@
-<form>
-    <div class="form-group form-inline">
-        Full text search:
-        <input class="form-control ml-2" type="text" name="searchTerm"
-            [(ngModel)]="auditService.searchTerm" />
-        <span class="ml-3" *ngIf="auditService.loading$ | async">Loading...</span>
+<form class="audit-registry" aria-label="Audit filters and results">
+    <div class="filter-bar">
+        <div class="search-control">
+            <label for="audit-search">Search event data</label>
+            <div class="search-input-wrap">
+                <span aria-hidden="true">/</span>
+                <input id="audit-search" class="form-control" type="search" name="searchTerm"
+                    autocomplete="off" placeholder="User, action, trigger or payload"
+                    [(ngModel)]="auditService.searchTerm" />
+            </div>
+            <small>Full-text filter across event identity and payload.</small>
+        </div>
+        <button *ngIf="auditService.searchTerm" class="btn btn-clear" type="button"
+            (click)="auditService.searchTerm = ''">Clear filter</button>
+        <div class="loading-state" *ngIf="auditService.loading$ | async" role="status" aria-live="polite">
+            <span class="loading-dot" aria-hidden="true"></span> Reading stream
+        </div>
     </div>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th scope="col" sbSortable="timestamp" (sort)="onSort($event)">
-                    <span>Time</span>
-                    <sb-sort-icon *ngIf='sortedColumn === "timestamp"' [direction]="sortedDirection"></sb-sort-icon>
-                </th>
-                <th scope="col"><span>User</span></th>
-                <th scope="col"><span>Action</span></th>
-                <th scope="col"><span>Trigger</span></th>
-                <th scope="col"><span>Payload</span></th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let audit of audits$ | async">
-                <td scope="row">{{ audit.timestamp | date:'short' }}</td>
-                <td>
-                    <ngb-highlight [result]="audit.user" [term]="auditService.searchTerm"></ngb-highlight>
-                </td>
-                <td>
-                    <ngb-highlight [result]="audit.value.resource" [term]="auditService.searchTerm"></ngb-highlight>
-                </td>
-                <td>
-                    {{ mapTrigger(audit.value.accept) }}
-                </td>
-                <td>
-                    {{ audit.value.body | json }}
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <div class="d-flex justify-content-between p-2">
-        <ngb-pagination [collectionSize]="(total$ | async) || 0"
-            [(page)]="auditService.page"
-            [pageSize]="auditService.pageSize"
-            [maxSize]="5"
-        ></ngb-pagination>
-        <select class="custom-select" style="width: auto"
-            name="pageSize" [(ngModel)]="auditService.pageSize">
-            <option [ngValue]="10">10 items per page</option>
-            <option [ngValue]="20">20 items per page</option>
-            <option [ngValue]="MAX_ITEMS">All</option>
-        </select>
+
+    <div class="table-shell" role="region" aria-label="Audit event results" tabindex="0">
+        <table class="table audit-table">
+            <thead>
+                <tr>
+                    <th scope="col" sbSortable="timestamp" (sort)="onSort($event)">
+                        <span>Timestamp</span>
+                        <sb-sort-icon *ngIf='sortedColumn === "timestamp"' [direction]="sortedDirection"></sb-sort-icon>
+                    </th>
+                    <th scope="col">Operator</th>
+                    <th scope="col">Action</th>
+                    <th scope="col">Origin</th>
+                    <th scope="col">Payload</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let audit of audits$ | async">
+                    <th class="timestamp" scope="row">
+                        <time [attr.datetime]="audit.timestamp">{{ audit.timestamp | date:'short' }}</time>
+                    </th>
+                    <td class="operator-cell">
+                        <span class="operator-mark" aria-hidden="true"></span>
+                        <ngb-highlight [result]="audit.user" [term]="auditService.searchTerm"></ngb-highlight>
+                    </td>
+                    <td>
+                        <span class="action-badge">
+                            <ngb-highlight [result]="audit.value.resource" [term]="auditService.searchTerm"></ngb-highlight>
+                        </span>
+                    </td>
+                    <td>
+                        <span class="origin-badge" [class.origin-web]="mapTrigger(audit.value.accept) === 'API/Web'"
+                            [class.origin-discord]="mapTrigger(audit.value.accept) === 'Discord'">
+                            {{ mapTrigger(audit.value.accept) }}
+                        </span>
+                    </td>
+                    <td class="payload-cell"><pre>{{ audit.value.body | json }}</pre></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="registry-footer">
+        <div class="result-count" aria-live="polite">{{ (total$ | async) || 0 }} matching events</div>
+        <ngb-pagination [collectionSize]="(total$ | async) || 0" [(page)]="auditService.page"
+            [pageSize]="auditService.pageSize" [maxSize]="5" aria-label="Audit result pages"></ngb-pagination>
+        <label class="page-size-control">
+            <span>Rows</span>
+            <select class="custom-select" name="pageSize" [(ngModel)]="auditService.pageSize">
+                <option [ngValue]="10">10</option>
+                <option [ngValue]="20">20</option>
+                <option [ngValue]="MAX_ITEMS">All</option>
+            </select>
+        </label>
     </div>
 </form>

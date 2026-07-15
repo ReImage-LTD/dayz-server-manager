@@ -1,14 +1,22 @@
 <sb-layout-error>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-6">
-                <div class="text-center mt-4">
-                    <h1 class="display-1">401</h1>
-                    <p class="lead">Unauthorized</p>
-                    <p>Access to this resource is denied.</p>
-                    <a routerLink="/dashboard"><fa-icon class="mr-1" [icon]='["fas", "arrow-left"]'></fa-icon>Return to Dashboard</a>
+    <div class="error-console">
+        <section class="error-panel" aria-labelledby="error-heading">
+            <header class="error-panel__header">
+                <span>Operations console / access control</span>
+                <span>Request blocked</span>
+            </header>
+            <div class="error-panel__body">
+                <p class="error-code" aria-hidden="true">401</p>
+                <div class="error-detail">
+                    <p class="eyebrow">Authorization required</p>
+                    <h1 id="error-heading">Access denied</h1>
+                    <p class="error-copy">Your current credentials do not permit access to this resource.</p>
+                    <a class="console-link" routerLink="/dashboard">
+                        <fa-icon class="mr-2" [icon]='["fas", "arrow-left"]'></fa-icon>Return to dashboard
+                    </a>
                 </div>
             </div>
-        </div>
+            <footer class="error-panel__footer"><span>HTTP_STATUS 401</span><span>AUTHORIZATION_FAILURE</span></footer>
+        </section>
     </div>
 </sb-layout-error>

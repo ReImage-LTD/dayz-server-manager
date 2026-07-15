@@ -1,0 +1,151 @@
+.error-console {
+    display: flex;
+    min-height: calc(100vh - 5rem);
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 1rem;
+    color: #e7edf3;
+    background:
+        radial-gradient(circle at 50% 35%, rgba(92, 200, 255, 0.08), transparent 36%),
+        repeating-linear-gradient(90deg, transparent 0, transparent 79px, rgba(92, 200, 255, 0.035) 80px),
+        #07101a;
+}
+
+.error-panel {
+    width: 100%;
+    max-width: 42rem;
+    overflow: hidden;
+    border: 1px solid #2c3d4f;
+    border-top: 3px solid var(--status-color);
+    border-radius: 0.3rem;
+    background: #111923;
+    box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.4);
+}
+
+.error-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 1.25rem;
+    border-bottom: 1px solid #2c3d4f;
+    background: #172230;
+    color: #91a3b5;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.error-panel__header span:last-child {
+    color: var(--status-color);
+}
+
+.error-panel__body {
+    display: grid;
+    grid-template-columns: minmax(8rem, 0.75fr) minmax(16rem, 1.25fr);
+    align-items: center;
+    padding: 2.5rem;
+}
+
+.error-code {
+    margin: 0;
+    color: var(--status-color);
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: clamp(4.5rem, 14vw, 7.5rem);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.08em;
+    line-height: 0.9;
+    text-shadow: 0 0 2rem rgba(92, 200, 255, 0.2);
+}
+
+.error-detail {
+    padding-left: 2.5rem;
+    border-left: 1px solid #334456;
+}
+
+.eyebrow {
+    margin: 0 0 0.4rem;
+    color: var(--status-color);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+}
+
+h1 {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    font-weight: 600;
+}
+
+.error-copy {
+    max-width: 25rem;
+    margin: 0.75rem 0 1.5rem;
+    color: #9cabb9;
+    font-size: 0.88rem;
+    line-height: 1.6;
+}
+
+.console-link {
+    display: inline-flex;
+    min-height: 2.65rem;
+    align-items: center;
+    padding: 0.65rem 1rem;
+    border: 1px solid #4daedb;
+    border-radius: 0.2rem;
+    color: #dff5ff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.console-link:hover,
+.console-link:focus {
+    background: rgba(92, 200, 255, 0.12);
+    color: #fff;
+    box-shadow: 0 0 0 0.2rem rgba(92, 200, 255, 0.15);
+}
+
+.error-panel__footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid #263646;
+    background: #0c141e;
+    color: #718497;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 575.98px) {
+    .error-console {
+        min-height: calc(100vh - 4rem);
+        padding: 1rem;
+    }
+
+    .error-panel__body {
+        display: block;
+        padding: 1.5rem;
+    }
+
+    .error-code {
+        margin-bottom: 1.5rem;
+        font-size: 4.5rem;
+    }
+
+    .error-detail {
+        padding: 1.5rem 0 0;
+        border-top: 1px solid #334456;
+        border-left: 0;
+    }
+
+    .error-panel__footer span:last-child {
+        display: none;
+    }
+}

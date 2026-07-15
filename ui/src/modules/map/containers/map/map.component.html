@@ -1,33 +1,56 @@
 <sb-layout-dashboard>
-    <div class="d-flex btn-group"
-         style="margin-top: -1rem; margin-left: -1rem; margin-right: -1rem; margin-bottom: 0.5rem;"
-    >
-        <label style="margin-bottom: 0; margin-right: 0.5rem; align-self: center;">Search:</label>
-        <input class="form-control"
-               style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
-               (keyup)="$event.key === 'Enter' ? search(searchInput.value) : null"
-               #searchInput
-        >
-        <button class="btn btn-primary"
-                (click)="search(searchInput.value)"
-        >
-            <fa-icon [icon]='["fas", "search"]'></fa-icon>
-        </button>
-        <button class="btn btn-danger"
-                (click)="searchInput.value = ''; search(undefined)"
-        >
-            <fa-icon [icon]='["fas", "trash"]'></fa-icon>
-        </button>
-    </div>
-    <div class="map-container"
-        *ngIf="options"
-        leaflet
-        (leafletMapReady)="onMapReady($event)"
-        (leafletCenterChange)="onCenterChange($event)"
-        (leafletDoubleClick)="onMapDoubleClick($event)"
-        [leafletOptions]="options"
-    ></div>
-    <div style="position: absolute;left: 48%;background: #fff8;z-index: 900;padding: 7px;border-radius: 7px;bottom: 6%;">
-        {{ curCoordinatesX }} | {{ curCoordinatesY }}
-    </div>
+    <section class="map-workspace" aria-label="Server map">
+        <div class="map-canvas"
+             *ngIf="options"
+             leaflet
+             (leafletMapReady)="onMapReady($event)"
+             (leafletCenterChange)="onCenterChange($event)"
+             (leafletDoubleClick)="onMapDoubleClick($event)"
+             [leafletOptions]="options"
+        ></div>
+
+        <div class="map-toolbar" role="search" aria-label="Search map markers">
+            <label class="map-search-label" for="map-search">Search map</label>
+            <div class="map-search-controls">
+                <input id="map-search"
+                       class="form-control map-search-input"
+                       type="search"
+                       placeholder="Player, vehicle, or location"
+                       autocomplete="off"
+                       (keyup)="$event.key === 'Enter' ? search(searchInput.value) : null"
+                       #searchInput
+                >
+                <button class="btn map-tool-button map-search-button"
+                        type="button"
+                        title="Search map markers"
+                        aria-label="Search map markers"
+                        (click)="search(searchInput.value)"
+                >
+                    <fa-icon [icon]='["fas", "search"]'></fa-icon>
+                    <span class="map-button-label">Search</span>
+                </button>
+                <button class="btn map-tool-button map-clear-button"
+                        type="button"
+                        title="Clear map search"
+                        aria-label="Clear map search"
+                        (click)="searchInput.value = ''; search(undefined)"
+                >
+                    <fa-icon [icon]='["fas", "trash"]'></fa-icon>
+                    <span class="map-button-label">Clear</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="map-status" role="status" aria-live="polite">
+            <span class="map-status-state">
+                <span class="map-status-dot" [class.is-ready]="map" aria-hidden="true"></span>
+                {{ map ? 'Map ready' : 'Loading map' }}
+            </span>
+            <span class="map-status-divider" aria-hidden="true"></span>
+            <span class="map-coordinates" title="Current map coordinates">
+                <span class="coordinate-label">X</span> {{ curCoordinatesX }}
+                <span class="coordinate-label">Y</span> {{ curCoordinatesY }}
+            </span>
+        </div>
+    </section>
 </sb-layout-dashboard>

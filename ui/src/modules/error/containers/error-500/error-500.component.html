@@ -1,13 +1,22 @@
 <sb-layout-error>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-6">
-                <div class="text-center mt-4">
-                    <h1 class="display-1">500</h1>
-                    <p class="lead">Internal Server Error</p>
-                    <a routerLink="/dashboard"><fa-icon class="mr-1" [icon]='["fas", "arrow-left"]'></fa-icon>Return to Dashboard</a>
+    <div class="error-console">
+        <section class="error-panel" aria-labelledby="error-heading">
+            <header class="error-panel__header">
+                <span>Operations console / server</span>
+                <span>Service fault</span>
+            </header>
+            <div class="error-panel__body">
+                <p class="error-code" aria-hidden="true">500</p>
+                <div class="error-detail">
+                    <p class="eyebrow">Internal server error</p>
+                    <h1 id="error-heading">The operation could not complete</h1>
+                    <p class="error-copy">The manager encountered an unexpected condition while processing this request.</p>
+                    <a class="console-link" routerLink="/dashboard">
+                        <fa-icon class="mr-2" [icon]='["fas", "arrow-left"]'></fa-icon>Return to dashboard
+                    </a>
                 </div>
             </div>
-        </div>
+            <footer class="error-panel__footer"><span>HTTP_STATUS 500</span><span>INTERNAL_SERVICE_FAILURE</span></footer>
+        </section>
     </div>
 </sb-layout-error>

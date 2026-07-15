@@ -2,6 +2,13 @@ import { UserLevel } from '../config/config';
 import { merge } from '../util/merge';
 import { constants as HTTP } from 'http2';
 
+export interface FleetRequestContext {
+    authenticated: true;
+    sourceNodeId: string;
+    authorizationLevel: UserLevel;
+    requestedBy: string;
+}
+
 export class Request {
 
     public resource: string = '';
@@ -12,6 +19,7 @@ export class Request {
     public channel?: string;
     public canStream?: boolean;
     public uuid?: string;
+    public fleet?: FleetRequestContext;
 
 }
 

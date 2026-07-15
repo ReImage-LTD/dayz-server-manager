@@ -1,13 +1,22 @@
 <sb-layout-error>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-6">
-                <div class="text-center mt-4">
-                    <img class="mb-4 img-error" src="assets/img/error-404-monochrome.svg" />
-                    <p class="lead">This requested URL was not found on this server.</p>
-                    <a routerLink="/dashboard"><fa-icon class="mr-1" [icon]='["fas", "arrow-left"]'></fa-icon>Return to Dashboard</a>
+    <div class="error-console">
+        <section class="error-panel" aria-labelledby="error-heading">
+            <header class="error-panel__header">
+                <span>Operations console / routing</span>
+                <span>Target unavailable</span>
+            </header>
+            <div class="error-panel__body">
+                <p class="error-code" aria-hidden="true">404</p>
+                <div class="error-detail">
+                    <p class="eyebrow">Route not found</p>
+                    <h1 id="error-heading">No endpoint at this location</h1>
+                    <p class="error-copy">The requested console route does not exist or may have been moved.</p>
+                    <a class="console-link" routerLink="/dashboard">
+                        <fa-icon class="mr-2" [icon]='["fas", "arrow-left"]'></fa-icon>Return to dashboard
+                    </a>
                 </div>
             </div>
-        </div>
+            <footer class="error-panel__footer"><span>HTTP_STATUS 404</span><span>ROUTE_LOOKUP_FAILURE</span></footer>
+        </section>
     </div>
 </sb-layout-error>

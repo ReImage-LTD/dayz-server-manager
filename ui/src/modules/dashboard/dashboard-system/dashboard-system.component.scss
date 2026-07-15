@@ -1,1 +1,101 @@
-@import 'styles/variables.scss';
+:host {
+    display: block;
+    margin-bottom: 1.75rem;
+}
+
+.section-heading,
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.section-heading {
+    margin-bottom: 0.85rem;
+}
+
+.section-heading p {
+    margin: 0 0 0.2rem;
+    color: var(--ops-accent, #5cc8ff);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+h2 {
+    margin: 0;
+    color: var(--ops-text-strong, #ffffff);
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.section-heading a {
+    color: var(--ops-accent, #5cc8ff);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.section-heading a:focus-visible {
+    border-radius: 0.15rem;
+    outline: 2px solid var(--ops-focus, #8ad8ff);
+    outline-offset: 0.2rem;
+}
+
+.chart-grid {
+    margin-right: -0.5rem;
+    margin-left: -0.5rem;
+}
+
+.chart-grid__item {
+    margin-bottom: 1rem;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+}
+
+sb-card {
+    display: block;
+    height: 100%;
+    border: 1px solid var(--ops-border, #2c3948);
+    border-radius: var(--ops-radius, 0.25rem);
+    background: var(--ops-surface, #111923);
+}
+
+.card-header {
+    border-bottom: 1px solid var(--ops-border, #2c3948);
+    background: var(--ops-surface-raised, #172230);
+    color: var(--ops-text-strong, #ffffff);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+.card-header small {
+    color: var(--ops-text-muted, #9cabb9);
+    font-size: 0.68rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.card-body {
+    min-height: 16rem;
+    padding: 1rem;
+    background: var(--ops-surface, #111923);
+}
+
+@media (max-width: 575.98px) {
+    .section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .card-header small {
+        display: none;
+    }
+
+    .card-body {
+        min-height: 13rem;
+        padding: 0.75rem;
+    }
+}

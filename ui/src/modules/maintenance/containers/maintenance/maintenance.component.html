@@ -1,122 +1,217 @@
 <sb-layout-dashboard>
     <sb-dashboard-head title="Maintenance" [hideBreadcrumbs]="false"></sb-dashboard-head>
-    <sb-card>
-        <div class="card-header">
-            <fa-icon class="mr-1" [icon]='["fas", "calendar-alt"]'></fa-icon>Maintenance
-        </div>
-        <div class="card-body">
+    <div class="ops-console" [attr.aria-busy]="runningAction !== undefined">
+        <header class="console-heading">
+            <div>
+                <span class="eyebrow">SERVER OPERATIONS</span>
+                <h2>Maintenance console</h2>
+                <p>Run routine upkeep, control access, and manage the server lifecycle.</p>
+            </div>
+            <div class="console-state" [class.is-busy]="runningAction" role="status" aria-live="polite">
+                <span class="state-dot" aria-hidden="true"></span>
+                {{ runningAction ? 'Operation in progress' : 'Ready for command' }}
+            </div>
+        </header>
 
-            <ngb-alert  *ngIf="outcomeBadge"
-                        [type]="outcomeBadge.success ? 'success' : 'danger'"
-            >
-                {{ outcomeBadge.message }}
-            </ngb-alert>
-
-            <strong>Updates / Backups</strong>
-            <hr>
-            <div class="row spaced">
-                <div class="col-md-3">
-                    <button class="btn btn-primary" (click)="updateServer(validateServerUpdate.value)">
-                        Update Server
-                    </button>
-                </div>
-                <div class="col-md-3">
-                    <div>
-                        <label for="validate-server-update" class="mr-1">
-                            Validate?
-                        </label>
-                        <input #validateServerUpdate id="validate-server-update" type="checkbox" [value]="true">
-                    </div>
-                </div>
-            </div>
-            <div class="row spaced">
-                <div class="col-md-3">
-                    <button class="btn btn-primary" (click)="updateMods(validateModUpdate.value, forceModUpdate.value)">
-                        Update Mods
-                    </button>
-                </div>
-                <div class="col-md-3">
-                    <div>
-                        <label for="validate-mod-update" class="mr-1">
-                            Validate?
-                        </label>
-                        <input #validateModUpdate id="validate-mod-update" type="checkbox" [value]="true">
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div title="Disables mod meta data checks and always triggers mod update.">
-                        <label for="force-mod-update" class="mr-1">
-                            Force?
-                        </label>
-                        <input #forceModUpdate id="force-mod-update" type="checkbox" [value]="false">
-                    </div>
-                </div>
-            </div>
-            <div class="row spaced">
-                <div class="col-md-3">
-                    <button class="btn btn-primary" (click)="createBackup()">
-                        Create Backup
-                    </button>
-                </div>
-            </div>
-            <strong>Restarts</strong>
-            <hr>
-            <div class="row spaced">
-                <div class="col-md-3">
-                    <button class="btn btn-primary" (click)="restartServer(false)">
-                        Restart Server
-                    </button>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-primary" title="Kills the server immediately (Use this only when its totally stuck)" (click)="restartServer(true)">
-                        Restart Server (Force)
-                    </button>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-primary" title="Prevents the manager from restarting the server until re-enabled" (click)="lockRestarts()">
-                        Lock Server Restart
-                    </button>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-primary" (click)="unlockRestarts()">
-                        UnLock Server Restart
-                    </button>
-                </div>
-            </div>
-            <strong>RCON</strong>
-            <hr>
-            <div class="row spaced">
-                <div class="col-md-3">
-                    <button class="btn btn-primary" (click)="lockServer()">
-                        Lock Server
-                    </button>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-primary" (click)="unlockServer()">
-                        UnLock Server
-                    </button>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-primary" (click)="kickAll()">
-                        Kick All
-                    </button>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-primary" (click)="shutdown()">
-                        Shutdown
-                    </button>
-                </div>
-            </div>
-            <div class="row spaced">
-                <div class="col-md-9">
-                    <input class="form-control form-control" #globalMessageInput>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-primary" (click)="sendMessage(globalMessageInput.value); globalMessageInput.value = '';">
-                        Send Global Message
-                    </button>
-                </div>
-            </div>
+        <div *ngIf="outcomeBadge"
+             class="operation-result"
+             [class.is-success]="outcomeBadge.success"
+             [class.is-failure]="!outcomeBadge.success"
+             role="alert">
+            <fa-icon [icon]='["fas", outcomeBadge.success ? "info" : "exclamation-triangle"]'></fa-icon>
+            <span>{{ outcomeBadge.message }}</span>
         </div>
-    </sb-card>
+
+        <div class="operation-grid">
+            <section class="operation-panel upkeep-panel" aria-labelledby="upkeep-title">
+                <div class="panel-heading">
+                    <span class="panel-icon"><fa-icon [icon]='["fas", "cogs"]'></fa-icon></span>
+                    <div>
+                        <span class="risk-label safe">ROUTINE</span>
+                        <h3 id="upkeep-title">Updates &amp; recovery</h3>
+                        <p>Refresh binaries and mods, or capture a recovery point.</p>
+                    </div>
+                </div>
+
+                <div class="command-row">
+                    <div class="command-copy">
+                        <strong>Server files</strong>
+                        <span>Install the latest DayZ dedicated server build.</span>
+                    </div>
+                    <label class="console-check" for="validate-server-update">
+                        <input #validateServerUpdate id="validate-server-update" type="checkbox">
+                        <span><strong>Validate files</strong><small>Verify the full installation after updating.</small></span>
+                    </label>
+                    <button class="console-button primary" type="button"
+                            [disabled]="runningAction !== undefined"
+                            (click)="updateServer(validateServerUpdate.checked)">
+                        <span *ngIf="runningAction !== 'update-server'">Update server</span>
+                        <span *ngIf="runningAction === 'update-server'">Updating...</span>
+                    </button>
+                </div>
+
+                <div class="command-row command-row-stacked">
+                    <div class="command-copy">
+                        <strong>Workshop mods</strong>
+                        <span>Check subscribed mods and deploy available updates.</span>
+                    </div>
+                    <div class="option-stack">
+                        <label class="console-check" for="validate-mod-update">
+                            <input #validateModUpdate id="validate-mod-update" type="checkbox">
+                            <span><strong>Validate files</strong><small>Verify each mod after updating.</small></span>
+                        </label>
+                        <label class="console-check" for="force-mod-update">
+                            <input #forceModUpdate id="force-mod-update" type="checkbox">
+                            <span><strong>Force update</strong><small>Skip metadata checks and download every mod.</small></span>
+                        </label>
+                    </div>
+                    <button class="console-button primary" type="button"
+                            [disabled]="runningAction !== undefined"
+                            (click)="updateMods(validateModUpdate.checked, forceModUpdate.checked)">
+                        <span *ngIf="runningAction !== 'update-mods'">Update mods</span>
+                        <span *ngIf="runningAction === 'update-mods'">Updating...</span>
+                    </button>
+                </div>
+
+                <div class="command-row compact-row">
+                    <div class="command-copy">
+                        <strong>Create backup</strong>
+                        <span>Capture current server state before planned work.</span>
+                    </div>
+                    <button class="console-button secondary" type="button"
+                            [disabled]="runningAction !== undefined"
+                            (click)="createBackup()">
+                        <span *ngIf="runningAction !== 'create-backup'">Create backup</span>
+                        <span *ngIf="runningAction === 'create-backup'">Creating...</span>
+                    </button>
+                </div>
+            </section>
+
+            <section class="operation-panel controls-panel" aria-labelledby="controls-title">
+                <div class="panel-heading">
+                    <span class="panel-icon"><fa-icon [icon]='["fas", "lock"]'></fa-icon></span>
+                    <div>
+                        <span class="risk-label caution">CONTROL</span>
+                        <h3 id="controls-title">Access &amp; automation</h3>
+                        <p>Control joins, scheduled restarts, and player messaging.</p>
+                    </div>
+                </div>
+
+                <div class="paired-command">
+                    <div class="command-copy">
+                        <strong>Player access</strong>
+                        <span>Lock new joins during maintenance, then reopen access.</span>
+                    </div>
+                    <div class="button-pair" role="group" aria-label="Player access controls">
+                        <button class="console-button secondary" type="button" [disabled]="runningAction !== undefined" (click)="lockServer()">Lock joins</button>
+                        <button class="console-button secondary" type="button" [disabled]="runningAction !== undefined" (click)="unlockServer()">Unlock joins</button>
+                    </div>
+                </div>
+
+                <div class="paired-command">
+                    <div class="command-copy">
+                        <strong>Automatic restarts</strong>
+                        <span>Pause manager-triggered restarts while work is underway.</span>
+                    </div>
+                    <div class="button-pair" role="group" aria-label="Automatic restart controls">
+                        <button class="console-button secondary" type="button" [disabled]="runningAction !== undefined" (click)="lockRestarts()">Pause restarts</button>
+                        <button class="console-button secondary" type="button" [disabled]="runningAction !== undefined" (click)="unlockRestarts()">Resume restarts</button>
+                    </div>
+                </div>
+
+                <form class="message-command" (submit)="$event.preventDefault(); sendMessage(globalMessageInput.value); globalMessageInput.value = ''">
+                    <label for="global-message"><strong>Global message</strong><span>Broadcast an RCON message to all connected players.</span></label>
+                    <div class="message-input">
+                        <input id="global-message" class="console-input" #globalMessageInput
+                               type="text" autocomplete="off" maxlength="512"
+                               placeholder="Enter a server announcement"
+                               [disabled]="runningAction !== undefined">
+                        <button class="console-button primary" type="submit"
+                                [disabled]="runningAction !== undefined || !globalMessageInput.value.trim()">Send message</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <section class="operation-panel history-panel" aria-labelledby="history-title">
+            <div class="panel-heading history-heading">
+                <span class="panel-icon"><fa-icon [icon]='["fas", "history"]'></fa-icon></span>
+                <div>
+                    <span class="risk-label safe">RECOVERY &amp; ACTIVITY</span>
+                    <h3 id="history-title">Backups and operation history</h3>
+                    <p>Restore a recovery point and monitor durable maintenance jobs.</p>
+                </div>
+                <button class="console-button secondary refresh-history" type="button"
+                        [disabled]="loadingHistory" (click)="refreshHistory()">
+                    {{ loadingHistory ? 'Refreshing...' : 'Refresh' }}
+                </button>
+            </div>
+            <div class="history-grid">
+                <div class="history-column">
+                    <h4>Recovery points <span>{{ backups.length }}</span></h4>
+                    <div class="empty-history" *ngIf="!backups.length && !loadingHistory">No mission backups are available.</div>
+                    <div class="history-list" *ngIf="backups.length">
+                        <article class="history-item" *ngFor="let backup of backups">
+                            <div>
+                                <strong>{{ backup.mtime | date:'medium' }}</strong>
+                                <code>{{ backup.id }}</code>
+                            </div>
+                            <div class="history-actions">
+                                <button class="console-button secondary" type="button" [disabled]="runningAction !== undefined"
+                                        (click)="restoreBackup(backup, false)">Restore</button>
+                                <button class="console-button warning" type="button" [disabled]="runningAction !== undefined"
+                                        (click)="restoreBackup(backup, true)">Restore &amp; restart</button>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+                <div class="history-column">
+                    <h4>Recent operations <span>{{ operations.length }}</span></h4>
+                    <div class="empty-history" *ngIf="!operations.length && !loadingHistory">No tracked operations have run yet.</div>
+                    <div class="history-list" *ngIf="operations.length">
+                        <article class="history-item operation-history" *ngFor="let operation of operations">
+                            <span class="operation-status" [attr.data-status]="operation.status">{{ operation.status }}</span>
+                            <div>
+                                <strong>{{ operationLabel(operation.type) }}</strong>
+                                <small>{{ operation.updatedAt | date:'medium' }}<span *ngIf="operation.message"> · {{ operation.message }}</span></small>
+                                <div class="operation-progress" *ngIf="operation.status === 'running' || operation.status === 'queued'">
+                                    <span [style.width.%]="operation.progress"></span>
+                                </div>
+                                <small class="operation-error" *ngIf="operation.error">{{ operation.error.message }}</small>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="operation-panel danger-panel" aria-labelledby="danger-title">
+            <div class="panel-heading">
+                <span class="panel-icon danger"><fa-icon [icon]='["fas", "exclamation-triangle"]'></fa-icon></span>
+                <div>
+                    <span class="risk-label danger">HIGH IMPACT</span>
+                    <h3 id="danger-title">Server lifecycle</h3>
+                    <p>These commands interrupt active sessions. High-impact actions require confirmation.</p>
+                </div>
+            </div>
+            <div class="danger-actions">
+                <div class="danger-command">
+                    <div class="command-copy"><strong>Graceful restart</strong><span>Request a standard managed restart.</span></div>
+                    <button class="console-button warning" type="button" [disabled]="runningAction !== undefined" (click)="restartServer(false)">Restart server</button>
+                </div>
+                <div class="danger-command">
+                    <div class="command-copy"><strong>Force restart</strong><span>Immediately terminate a stuck server process.</span></div>
+                    <button class="console-button danger" type="button" [disabled]="runningAction !== undefined" (click)="restartServer(true)">Force restart</button>
+                </div>
+                <div class="danger-command">
+                    <div class="command-copy"><strong>Remove players</strong><span>Disconnect every currently connected player.</span></div>
+                    <button class="console-button danger-outline" type="button" [disabled]="runningAction !== undefined" (click)="kickAll()">Kick all players</button>
+                </div>
+                <div class="danger-command">
+                    <div class="command-copy"><strong>Shutdown</strong><span>Stop the DayZ server through RCON.</span></div>
+                    <button class="console-button danger" type="button" [disabled]="runningAction !== undefined" (click)="shutdown()">Shutdown server</button>
+                </div>
+            </div>
+        </section>
+    </div>
 </sb-layout-dashboard>

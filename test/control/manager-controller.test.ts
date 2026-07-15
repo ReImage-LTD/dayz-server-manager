@@ -18,6 +18,7 @@ import { Config } from '../../src/config/config';
 import { DiscordBot } from '../../src/services/discord';
 import { DiscordEventConverter } from '../../src/services/discord-event-converter';
 import { ConfigFileHelper } from '../../src/config/config-file-helper';
+import { NodeRegistry } from '../../src/services/node-registry';
 
 class TestMonitor {
     public startCalled = false;
@@ -100,6 +101,7 @@ describe('Test class ManagerController', () => {
     let steamCmd: StubInstance<SteamCMD>;
     let ingameReport: StubInstance<IngameReport>;
     let requirements: StubInstance<Requirements>;
+    let nodeRegistry: NodeRegistry;
 
     before(() => {
         disableConsole();
@@ -125,6 +127,7 @@ describe('Test class ManagerController', () => {
         injector.register(Requirements, stubClass(Requirements), { lifecycle: Lifecycle.Singleton });
         injector.register(DiscordBot, stubClass(DiscordBot), { lifecycle: Lifecycle.Singleton });
         injector.register(DiscordEventConverter, stubClass(DiscordEventConverter), { lifecycle: Lifecycle.Singleton });
+        injector.register(NodeRegistry, NodeRegistry, { lifecycle: Lifecycle.Singleton });
         
         configWatcher = injector.resolve(ConfigWatcher) as any;
         configHelper = injector.resolve(ConfigFileHelper) as any;
@@ -133,6 +136,7 @@ describe('Test class ManagerController', () => {
         steamCmd = injector.resolve(SteamCMD) as any;
         ingameReport = injector.resolve(IngameReport) as any;
         requirements = injector.resolve(Requirements) as any;
+        nodeRegistry = injector.resolve(NodeRegistry);
     });
 
     it('ManagerController', async () => {
@@ -140,7 +144,17 @@ describe('Test class ManagerController', () => {
         container.register(TestStateful, TestStateful, { lifecycle: Lifecycle.Singleton });
         const testStateful = container.resolve(TestStateful);
 
-        configWatcher.watch.resolves(new Config());
+        const config = new Config();
+        config.updateServerOnStartup = false;
+        config.updateModsOnStartup = false;
+        config.remoteNodes = [{
+            id: 'remote',
+            name: 'Remote node',
+            endpoint: 'https://remote.example/fleet/agent',
+            sharedSecret: 'secret',
+            capabilities: ['serverinfo'],
+        }];
+        configWatcher.watch.returns(config);
 
         steamCmd.checkSteamCmd.resolves(true);
         steamCmd.checkServer.resolves(true);
@@ -157,6 +171,9 @@ describe('Test class ManagerController', () => {
         expect(steamCmd.checkServer.called).to.be.true;
         expect(steamCmd.checkMods.called).to.be.true;
         expect(steamCmd.installMods.called).to.be.true;
+        expect(nodeRegistry.get('dayz')?.descriptor.type).to.equal('local');
+        expect(nodeRegistry.get('remote')?.descriptor.type).to.equal('remote');
+        expect(nodeRegistry.get('remote')?.online).to.be.false;
         
         await controller.stop();
 

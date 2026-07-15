@@ -1,4 +1,19 @@
-<nav class="sb-sidenav accordion" id="sidenavAccordion" [ngClass]="sidenavStyle">
+<nav class="sb-sidenav accordion" id="sidenavAccordion" [ngClass]="sidenavStyle" aria-label="Primary navigation">
+    <div class="instance-block">
+        <span class="instance-label">Control node</span>
+        <label class="sr-only" for="activeNode">Active server instance</label>
+        <select id="activeNode" class="instance-select"
+                [ngModel]="(fleet.activeNode$ | async)?.descriptor?.id"
+                (ngModelChange)="fleet.select($event, true)">
+            <option *ngFor="let node of fleet.nodes$ | async" [ngValue]="node.descriptor.id">
+                {{ node.descriptor.name }}{{ node.descriptor.type === 'local' ? ' (local)' : '' }}
+            </option>
+        </select>
+        <span class="instance-state" *ngIf="fleet.activeNode$ | async as active">
+            <span class="state-dot" [class.is-offline]="!active.online"></span>
+            {{ active.online ? 'Connected' : 'Connection checked on demand' }}
+        </span>
+    </div>
     <div class="sb-sidenav-menu">
         <div class="nav">
             <ng-container *ngFor="let section of sideNavSections"

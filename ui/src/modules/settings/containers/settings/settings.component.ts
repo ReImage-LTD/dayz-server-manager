@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { Config, DiscordChannelType } from '../../../app-common/models';
+import { Config, DiscordChannelType, Event, Hook, RemoteNodeConfig, WorkshopMod } from '../../../app-common/models';
 import { AppCommonService } from '../../../app-common/services/app-common.service';
 import * as commentJson from 'comment-json';
 
 import configschema from '../../../../../../src/config/config.schema.json';
 
-type ServerCfgKey = keyof typeof configschema.definitions.ServerCfg.properties;
+type ServerCfgKey = Extract<keyof typeof configschema.definitions.ServerCfg.properties, string>;
 
 interface Property {
     name: string;
@@ -40,7 +40,12 @@ export class SettingsComponent implements OnInit {
     ) {}
 
     public onSubmit(): void {
+        if (!this.isConfigComplete()) {
+            this.outcomeBadge = { message: 'Complete all required repeatable settings before saving', success: false };
+            return;
+        }
         this.loading = true;
+        this.outcomeBadge = undefined;
         this.appCommon.updateManagerConfig(
             commentJson.stringify(this.config),
         ).toPromise().then(
@@ -68,6 +73,7 @@ export class SettingsComponent implements OnInit {
 
     public reset(): void {
         this.loading = true;
+        this.outcomeBadge = undefined;
         this.appCommon.fetchManagerConfig().toPromise().then(
             (config) => {
                 this.config = commentJson.parse(config) as any;
@@ -77,8 +83,17 @@ export class SettingsComponent implements OnInit {
                             x.mode = [x.mode];
                         }
                         return x;
-                    })
+                    });
                 }
+                this.config.admins = this.config.admins || [];
+                this.config.events = (this.config.events || []).map((event) => ({
+                    ...event,
+                    params: event.params || [],
+                }));
+                this.config.hooks = (this.config.hooks || []).map((hook) => ({
+                    ...hook,
+                    params: hook.params || [],
+                }));
 
                 if (this.config.serverCfg) {
                     this.serverCfgProps = this.getServerCfgProps(this.config);
@@ -88,7 +103,14 @@ export class SettingsComponent implements OnInit {
 
                 this.loading = false;
             },
-            console.error,
+            (err) => {
+                console.error(err);
+                this.loading = false;
+                this.outcomeBadge = {
+                    message: 'Failed to load config. See manager logs for details',
+                    success: false,
+                };
+            },
         );
     }
 
@@ -106,6 +128,77 @@ export class SettingsComponent implements OnInit {
         });
     }
 
+    public addWorkshopMod(): void {
+        this.config.steamWsMods.push({
+            name: '',
+            workshopId: '',
+        });
+    }
+
+    public addAdmin(): void {
+        this.config.admins.push({
+            userId: '',
+            userLevel: 'view',
+            password: '',
+        });
+    }
+
+    public addEvent(): void {
+        this.config.events.push({
+            name: '',
+            type: 'message',
+            cron: '',
+            params: [],
+        });
+    }
+
+    public addHook(): void {
+        this.config.hooks.push({
+            type: 'beforeStart',
+            program: '',
+            params: [],
+        });
+    }
+
+    public addRemoteNode(): void {
+        this.config.remoteNodes.push({
+            id: '',
+            name: '',
+            endpoint: '',
+            sharedSecret: '',
+            capabilities: ['serverinfo', 'system', 'players', 'logs', 'metrics'],
+            authorizationLevel: 'view',
+        });
+    }
+
+    public setNodeCapabilities(node: RemoteNodeConfig, value: string): void {
+        node.capabilities = this.parseParams(value);
+    }
+
+    public isConfigComplete(): boolean {
+        return this.config.admins.every((admin) => !!admin.userId.trim() && !!admin.password)
+            && this.config.remoteNodes.every((node) => !!node.id.trim() && !!node.name.trim()
+                && !!node.endpoint.trim() && !!node.sharedSecret && node.capabilities.length > 0)
+            && this.config.events.every((event) => !!event.name.trim() && !!event.cron.trim())
+            && this.config.hooks.every((hook) => !!hook.program.trim());
+    }
+
+    public setEventParams(event: Event, value: string): void {
+        event.params = this.parseParams(value);
+    }
+
+    public setHookParams(hook: Hook, value: string): void {
+        hook.params = this.parseParams(value);
+    }
+
+    private parseParams(value: string): string[] {
+        return value.split(',').map((part) => part.trim()).filter((part) => !!part);
+    }
+
+    public isWorkshopMod(mod: string | WorkshopMod): mod is WorkshopMod {
+        return typeof mod !== 'string';
+    }
+
     private getServerCfgProps(config: Config): Property[] {
         const fixedKeys = ['motd', 'motdInterval', 'Missions'] as ServerCfgKey[];
 
@@ -115,8 +208,6 @@ export class SettingsComponent implements OnInit {
 
                 const included = ['string', 'number'].includes(type)
                     && !fixedKeys.includes(x);
-
-                console.log(`${x}: ${included}`);
 
                 return included;
             })
@@ -134,14 +225,16 @@ export class SettingsComponent implements OnInit {
                     type: typeof config.serverCfg[key] as 'string' | 'number',
                     default: typeof config.serverCfg[key] === 'string' ? '' : 0,
                     custom: true,
-                }
+                };
             });
 
         return [...known, ...unknown];
     }
 
     public addCustomServerCfgEntry(name: string, type: 'string' | 'number'): void {
-        if (!name || name.length < 3) {
+        const trimmedName = name.trim();
+
+        if (trimmedName.length < 3) {
             this.outcomeBadge = {
                 message: 'Custom field names must be at least 3 characters long',
                 success: false,
@@ -149,13 +242,32 @@ export class SettingsComponent implements OnInit {
             return;
         }
 
+        if (this.serverCfgProps?.some((prop) => prop.name === trimmedName)) {
+            this.outcomeBadge = {
+                message: `A server.cfg field named ${trimmedName} already exists`,
+                success: false,
+            };
+            return;
+        }
+
         this.serverCfgProps?.push({
-            name: name as ServerCfgKey,
+            name: trimmedName,
             description: '',
             type,
             default: type === 'string' ? '' : 0,
             custom: true,
         });
+        this.config.serverCfg[trimmedName] = type === 'string' ? '' : 0;
+        this.outcomeBadge = undefined;
+    }
+
+    public removeCustomServerCfgEntry(prop: Property): void {
+        if (!prop.custom) {
+            return;
+        }
+
+        this.serverCfgProps = this.serverCfgProps?.filter((entry) => entry !== prop);
+        delete this.config.serverCfg[prop.name];
     }
 
 }

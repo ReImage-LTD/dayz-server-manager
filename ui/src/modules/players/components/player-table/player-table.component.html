@@ -1,96 +1,88 @@
-<form>
-    <div class="form-group form-inline">
-        Search:
-        <input class="form-control ml-2" type="text" name="searchTerm" #searchTerm
-            (change)="playerService.updateState({ searchTerm: searchTerm.value })" />
-        <span class="ml-3" *ngIf="playerService.loading$ | async">Loading...</span>
+<form class="player-registry" aria-label="Player search and results">
+    <div class="registry-toolbar">
+        <div class="search-control">
+            <label for="player-search">Search players</label>
+            <div class="search-input-wrap">
+                <span aria-hidden="true">/</span>
+                <input id="player-search" class="form-control" type="search" name="searchTerm" #searchTerm
+                    autocomplete="off" placeholder="Name, IP, GUID, Steam64 or DayZ ID"
+                    (input)="playerService.updateState({ searchTerm: searchTerm.value, page: 1 })" />
+            </div>
+        </div>
+        <div class="loading-state" *ngIf="playerService.loading$ | async" role="status" aria-live="polite">
+            <span class="loading-dot" aria-hidden="true"></span> Updating registry
+        </div>
     </div>
-    <span>SteamID, DayZID and character values might only be available when the player is online.</span>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th scope="col" sbSortable="id" (sort)="onSort($event)">
-                    <span>#</span>
-                    <sb-sort-icon *ngIf='(playerService.state$ | async)!.sortColumn === "id"' [direction]="(playerService.state$ | async)!.sortDirection"></sb-sort-icon>
-                </th>
-                <th scope="col" sbSortable="name" (sort)="onSort($event)"><span>Name</span>
-                    <sb-sort-icon *ngIf='(playerService.state$ | async)!.sortColumn === "name"' [direction]="(playerService.state$ | async)!.sortDirection"></sb-sort-icon>
-                </th>
-                <th scope="col"><span>BE GUID</span></th>
-                <th scope="col"><span>IP</span></th>
-                <th scope="col" sbSortable="ping" (sort)="onSort($event)"><span>Ping</span>
-                    <sb-sort-icon *ngIf='(playerService.state$ | async)!.sortColumn === "ping"' [direction]="(playerService.state$ | async)!.sortDirection"></sb-sort-icon>
-                </th>
-                <th scope="col"><span>SteamID</span></th>
-                <th scope="col"><span>DayZID</span></th>
-                <th scope="col"><span>Damage</span></th>
-                <th scope="col"><span>Position</span></th>
-                <th scope="col"><span>Banned</span></th>
-                <th scope="col"><span>Whitelisted</span></th>
-                <th scope="col"><span>Prio</span></th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let player of players$ | async"
-                (click)="playerService.selectPlayer(player.beguid)"
-                [ngStyle]="{ 'background': (playerService.selected$ | async)?.beguid === player.beguid ? '#00009999' : undefined }"
-            >
-                <th scope="row">{{ player.id }}</th>
-                <td>
-                    <!-- <img class="mr-2"
-                         [src]="'https://upload.wikimedia.org/wikipedia/commons/' + player.flag"
-                            style="width: 20px"
-                    /> -->
-                    <ngb-highlight [result]="player.name" [term]="(playerService.state$ | async)!.searchTerm"></ngb-highlight>
-                </td>
-                <td>
-                    <ngb-highlight [result]="player.beguid" [term]="(playerService.state$ | async)!.searchTerm"></ngb-highlight>
-                </td>
-                <td>
-                    {{ player.ip + ':' + player.port }}
-                </td>
-                <td>
-                    {{ player.ping | number }}
-                </td>
-                <td>
-                    <ngb-highlight [result]="player.steamid" [term]="(playerService.state$ | async)!.searchTerm"></ngb-highlight>
-                </td>
-                <td>
-                    <ngb-highlight [result]="player.dayzid" [term]="(playerService.state$ | async)!.searchTerm"></ngb-highlight>
-                </td>
-                <td>
-                    {{ player.damage }}
-                </td>
-                <td>
-                    {{ player.position }}
-                </td>
-                <td>
-                    {{ player.banned ? 'YES' : 'NO' }}
-                </td>
-                <td>
-                    {{ player.whitelisted ? 'YES' : 'NO' }}
-                </td>
-                <td>
-                    {{ player.prio ? 'YES' : 'NO' }}
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <div class="d-flex justify-content-between p-2">
+
+    <p class="registry-note">Steam64, DayZ ID and character telemetry may only be available while a player is online.</p>
+
+    <div class="table-shell" role="region" aria-label="Player results" tabindex="0">
+        <table class="table player-table">
+            <thead>
+                <tr>
+                    <th scope="col" sbSortable="id" (sort)="onSort($event)"><span>#</span>
+                        <sb-sort-icon *ngIf='(playerService.state$ | async)!.sortColumn === "id"' [direction]="(playerService.state$ | async)!.sortDirection"></sb-sort-icon>
+                    </th>
+                    <th scope="col" sbSortable="name" (sort)="onSort($event)"><span>Player</span>
+                        <sb-sort-icon *ngIf='(playerService.state$ | async)!.sortColumn === "name"' [direction]="(playerService.state$ | async)!.sortDirection"></sb-sort-icon>
+                    </th>
+                    <th scope="col">BE GUID</th>
+                    <th scope="col">Endpoint</th>
+                    <th scope="col" sbSortable="ping" (sort)="onSort($event)"><span>Ping</span>
+                        <sb-sort-icon *ngIf='(playerService.state$ | async)!.sortColumn === "ping"' [direction]="(playerService.state$ | async)!.sortDirection"></sb-sort-icon>
+                    </th>
+                    <th scope="col">Steam64</th>
+                    <th scope="col">DayZ ID</th>
+                    <th scope="col">Damage</th>
+                    <th scope="col">Position</th>
+                    <th scope="col">Access state</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let player of players$ | async"
+                    (click)="playerService.selectPlayer(player.beguid)"
+                    (keydown.enter)="playerService.selectPlayer(player.beguid)"
+                    (keydown.space)="playerService.selectPlayer(player.beguid); $event.preventDefault()"
+                    [class.is-selected]="(playerService.selected$ | async)?.beguid === player.beguid" tabindex="0">
+                    <th scope="row">{{ player.id }}</th>
+                    <td class="player-name">
+                        <strong><ngb-highlight [result]="player.name" [term]="(playerService.state$ | async)!.searchTerm"></ngb-highlight></strong>
+                        <small>{{ player.ingamename }}</small>
+                    </td>
+                    <td><code><ngb-highlight [result]="player.beguid" [term]="(playerService.state$ | async)!.searchTerm"></ngb-highlight></code></td>
+                    <td class="text-nowrap">{{ player.ip }}<span *ngIf="player.port">:{{ player.port }}</span></td>
+                    <td class="metric-cell">{{ player.ping | number }}</td>
+                    <td><code><ngb-highlight [result]="player.steamid" [term]="(playerService.state$ | async)!.searchTerm"></ngb-highlight></code></td>
+                    <td><code><ngb-highlight [result]="player.dayzid" [term]="(playerService.state$ | async)!.searchTerm"></ngb-highlight></code></td>
+                    <td class="metric-cell">{{ player.damage }}</td>
+                    <td class="position-cell">{{ player.position }}</td>
+                    <td>
+                        <div class="status-stack">
+                            <span class="status-badge" [class.status-danger]="player.banned">{{ player.banned ? 'BANNED' : 'CLEAR' }}</span>
+                            <span class="status-badge" [class.status-positive]="player.whitelisted">{{ player.whitelisted ? 'WHITELIST' : 'STANDARD' }}</span>
+                            <span class="status-badge" [class.status-accent]="player.prio">{{ player.prio ? 'PRIORITY' : 'NORMAL' }}</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="registry-footer">
         <ngb-pagination [collectionSize]="(total$ | async) || 0"
             [page]="(playerService.state$ | async)!.page"
             (pageChange)="playerService.updateState({ page: $event })"
-            [pageSize]="(playerService.state$ | async)!.pageSize"
-            [maxSize]="5"
-        ></ngb-pagination>
-        <select class="custom-select" style="width: auto"
-            name="pageSize"
-            [ngModel]="(playerService.state$ | async)!.pageSize"
-            (ngModelChange)="playerService.updateState({ pageSize: $event })"
-        >
-            <option [ngValue]="10">10 items per page</option>
-            <option [ngValue]="20">20 items per page</option>
-            <option [ngValue]="MAX_ITEMS">All</option>
-        </select>
+            [pageSize]="(playerService.state$ | async)!.pageSize" [maxSize]="5"
+            aria-label="Player result pages"></ngb-pagination>
+        <label class="page-size-control">
+            <span>Rows</span>
+            <select class="custom-select" name="pageSize"
+                [ngModel]="(playerService.state$ | async)!.pageSize"
+                (ngModelChange)="playerService.updateState({ pageSize: $event, page: 1 })">
+                <option [ngValue]="10">10</option>
+                <option [ngValue]="20">20</option>
+                <option [ngValue]="MAX_ITEMS">All</option>
+            </select>
+        </label>
     </div>
 </form>

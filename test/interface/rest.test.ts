@@ -12,6 +12,10 @@ import { EventBus } from '../../src/control/event-bus';
 import { InternalEventTypes } from '../../src/types/events';
 import { WebsocketCommand, WebsocketListenerEvent, WebsocketListenerType, WebsocketMessage } from '../../src/types/websocket';
 import { Request } from '../../src/types/interface';
+import { Response } from '../../src/types/interface';
+import { NodeRegistry } from '../../src/services/node-registry';
+import { RemoteNodeClient } from '../../src/services/remote-node-client';
+import { InjectionTokens } from '../../src/util/apis';
 
 
 describe('Test REST', () => {
@@ -21,6 +25,8 @@ describe('Test REST', () => {
     let manager: StubInstance<Manager>;
     let eventBus: EventBus;
     let interfaceService: StubInstance<Interface>;
+    let nodeRegistry: NodeRegistry;
+    let remoteNodeClient: RemoteNodeClient;
 
     beforeEach(() => {
         // restore mocks
@@ -32,12 +38,17 @@ describe('Test REST', () => {
         injector.register(Manager, stubClass(Manager), { lifecycle: Lifecycle.Singleton });
         injector.register(EventBus, EventBus, { lifecycle: Lifecycle.Singleton });
         injector.register(Interface, stubClass(Interface), { lifecycle: Lifecycle.Singleton });
+        injector.register(NodeRegistry, NodeRegistry, { lifecycle: Lifecycle.Singleton });
+        injector.register(InjectionTokens.https, { useValue: {} as any });
+        injector.register(RemoteNodeClient, RemoteNodeClient, { lifecycle: Lifecycle.Singleton });
         
         manager = injector.resolve(Manager) as any;
         manager.initDone = true;
 
         eventBus = injector.resolve(EventBus) as any;
         interfaceService = injector.resolve(Interface) as any;
+        nodeRegistry = injector.resolve(NodeRegistry);
+        remoteNodeClient = injector.resolve(RemoteNodeClient);
     });
 
     it('REST', async () => {
@@ -268,6 +279,22 @@ describe('Test REST', () => {
         expect(response.data).to.equal('serverinfo');
     });
 
+    it('forwards operation updates to websocket listeners', () => {
+        manager.isUserOfLevel.returns(true);
+        Interface.prototype['setupCommandMap'].apply(interfaceService);
+        const rest = injector.resolve(REST);
+        let sent: string;
+        const socket = { send: (message: string) => sent = message } as any;
+        rest.wsClients = new Map([[socket, { user: 'admin', listeners: [] }]]);
+
+        rest['registerWsEventListener'](socket, WebsocketListenerType.OPERATIONS);
+        eventBus.emit(InternalEventTypes.OPERATION_UPDATED, { id: 'operation-id' } as any);
+
+        expect(JSON.parse(sent!).data.type).to.equal(WebsocketListenerType.OPERATIONS);
+        expect(JSON.parse(sent!).data.event.id).to.equal('operation-id');
+        rest.wsClients.get(socket)?.listeners.forEach((listener) => listener.off());
+    });
+
     it('REST-handleCommand', async () => {
 
         manager.initDone = false;
@@ -315,6 +342,52 @@ describe('Test REST', () => {
         expect(interfaceService.execute.firstCall.lastArg.resource).to.equal('testResource');
         expect(interfaceService.execute.firstCall.lastArg.user).to.equal('admin');
         
+    });
+
+    it('authenticates, dispatches, and rejects replayed fleet agent requests', async () => {
+        (manager as any).config = { instanceId: 'local' };
+        nodeRegistry.registerLocal({
+            id: 'local',
+            name: 'Local',
+            type: 'local',
+            capabilities: ['*'],
+        });
+        nodeRegistry.registerRemote({
+            id: 'remote',
+            name: 'Remote',
+            type: 'remote',
+            endpoint: 'https://remote.example/fleet/agent',
+            capabilities: ['serverinfo'],
+        }, 'fleet-secret');
+        interfaceService.executeFleetCommand.resolves(new Response(200, { name: 'server' }));
+        const envelope = remoteNodeClient.createEnvelope('local', {
+            resource: 'serverinfo',
+            method: 'get',
+            authorizationLevel: 'view',
+            requestedBy: 'viewer',
+        }, 'fleet-secret', 1000, Date.now(), 'remote');
+        const wrongTarget = remoteNodeClient.createEnvelope('other-local', envelope.command, 'fleet-secret', 1000, Date.now(), 'remote');
+        const wrongSignature = remoteNodeClient.createEnvelope('local', envelope.command, 'wrong-secret', 1000, Date.now(), 'remote');
+        const expired = remoteNodeClient.createEnvelope('local', envelope.command, 'fleet-secret', 1000, Date.now() - 2000, 'remote');
+        const statuses: number[] = [];
+        const response = {
+            status: (status: number) => {
+                statuses.push(status);
+                return response;
+            },
+            send: sinon.stub(),
+        } as any;
+        const rest = injector.resolve(REST);
+
+        await rest['handleFleetAgent']({ body: envelope } as any, response);
+        await rest['handleFleetAgent']({ body: envelope } as any, response);
+        await rest['handleFleetAgent']({ body: wrongTarget } as any, response);
+        await rest['handleFleetAgent']({ body: wrongSignature } as any, response);
+        await rest['handleFleetAgent']({ body: expired } as any, response);
+
+        expect(statuses).to.deep.equal([200, 401, 401, 401, 401]);
+        expect(interfaceService.executeFleetCommand).to.have.been.calledOnce;
+        expect(nodeRegistry.get('remote')?.online).to.be.true;
     });
 
     it('REST-handleCommand-cors', async () => {

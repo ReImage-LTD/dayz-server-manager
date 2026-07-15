@@ -1,8 +1,18 @@
-<sb-card>
-    <div class="card-header">
-        <fa-icon class="mr-1" [icon]='["fas", "table"]'></fa-icon>Players
+<section aria-labelledby="players-heading">
+    <div class="section-heading">
+        <div>
+            <p>Live roster</p>
+            <h2 id="players-heading">Connected players</h2>
+        </div>
+        <span>RCON session data</span>
     </div>
-    <div class="card-body">
-        <sb-player-table></sb-player-table>
-    </div>
-</sb-card>
+    <sb-card>
+        <div class="card-header">
+            <span><fa-icon class="mr-1" [icon]='["fas", "table"]'></fa-icon>Player activity</span>
+            <small>Current session</small>
+        </div>
+        <div class="card-body" role="region" aria-labelledby="players-heading" tabindex="0">
+            <sb-player-table></sb-player-table>
+        </div>
+    </sb-card>
+</section>

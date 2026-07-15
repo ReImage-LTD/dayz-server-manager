@@ -1,11 +1,14 @@
 import { Component, DebugElement, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { MockSideNavItem } from '@testing/mocks/navigation';
 
+import { SideNavItem } from '../../models';
 import { SideNavItemComponent } from './side-nav-item.component';
 
-const mockSideNavItem = new MockSideNavItem();
+const mockSideNavItem: SideNavItem = {
+    text: 'Dashboard',
+    link: '/dashboard',
+};
 
 @Component({
     template: `
@@ -49,5 +52,6 @@ describe('SideNavItemComponent', () => {
 
     it('should display the component', () => {
         expect(hostComponentNE.querySelector('sb-side-nav-item')).toEqual(jasmine.anything());
+        expect(component.sideNavItem).toBe(mockSideNavItem);
     });
 });

@@ -440,6 +440,22 @@ export class WorkshopMod {
 
 }
 
+export class RemoteNodeConfig {
+
+    public id: string = '';
+
+    public name: string = '';
+
+    public endpoint: string = '';
+
+    public sharedSecret: string = '';
+
+    public capabilities: string[] = [];
+
+    public authorizationLevel: UserLevel = 'view';
+
+}
+
 export type DiscordChannelType =
     'admin' // admin commands are allowed and public as well as private notifications are posted in this channel
     | 'rcon' // rcon relay
@@ -522,6 +538,12 @@ export class Config {
      * (because this app wont provide HTTPS capabilities)
      */
     public publishWebServer: boolean = false;
+
+    /**
+     * Remote managers trusted for signed fleet commands. Endpoints must point
+     * to the remote manager's /fleet/agent route.
+     */
+    public remoteNodes: RemoteNodeConfig[] = [];
 
     /**
      * The port of the ingame REST API

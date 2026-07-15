@@ -1,11 +1,14 @@
 import { Component, DebugElement, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { UserService } from '@modules/auth/services';
-import { NavigationService } from '@modules/navigation/services';
-import { NavigationServiceStub, UserServiceStub } from '@testing/stubs';
+import { FormsModule } from '@angular/forms';
+import { BehaviorSubject } from 'rxjs';
 
+import { FleetContextService } from '../../../app-common/services/fleet-context.service';
+import { NavigationService } from '../../services/navigation.service';
 import { SideNavComponent } from './side-nav.component';
+
+const navigationServiceStub = {};
 
 @Component({
     template: `
@@ -28,15 +31,21 @@ describe('SideNavComponent', () => {
     let componentNE: Element;
 
     let navigationService: NavigationService;
-    let userService: UserService;
 
     beforeEach(() => {
         TestBed.configureTestingModule({
             declarations: [TestHostComponent, SideNavComponent],
-            imports: [NoopAnimationsModule],
+            imports: [FormsModule, NoopAnimationsModule],
             providers: [
-                { provide: NavigationService, useValue: NavigationServiceStub },
-                { provide: UserService, useValue: UserServiceStub },
+                { provide: NavigationService, useValue: navigationServiceStub },
+                {
+                    provide: FleetContextService,
+                    useValue: {
+                        activeNode$: new BehaviorSubject(undefined),
+                        nodes$: new BehaviorSubject([]),
+                        select: jasmine.createSpy('select'),
+                    },
+                },
             ],
             schemas: [NO_ERRORS_SCHEMA],
         }).compileComponents();
@@ -51,12 +60,12 @@ describe('SideNavComponent', () => {
         componentNE = componentDE.nativeElement;
 
         navigationService = TestBed.inject(NavigationService);
-        userService = TestBed.inject(UserService);
 
         fixture.detectChanges();
     });
 
     it('should display the component', () => {
         expect(hostComponentNE.querySelector('sb-side-nav')).toEqual(jasmine.anything());
+        expect(component.navigationService).toBe(navigationService);
     });
 });

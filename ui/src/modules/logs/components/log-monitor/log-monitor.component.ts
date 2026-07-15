@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, HostListener, Input, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { LogMessage, LogType } from '../../../app-common/models';
 import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
@@ -13,11 +13,12 @@ export class LogMonitorComponent implements OnInit, OnDestroy, AfterViewInit {
 
     public title: string = 'Logs';
     @ViewChild('scrollView') public container!: any;
-    public itemSize = 1;
+    public itemSize = 22;
     public lockToEnd: boolean = true;
 
     public messages: LogMessage[] = [];
     public sub?: Subscription;
+    private scrollTimer?: number;
 
     public constructor(
         private zone: NgZone,
@@ -53,6 +54,7 @@ export class LogMonitorComponent implements OnInit, OnDestroy, AfterViewInit {
             this.sub.unsubscribe();
             this.sub = undefined;
         }
+        if (this.scrollTimer) window.clearTimeout(this.scrollTimer);
     }
 
     public ngAfterViewInit(): void {
@@ -61,24 +63,19 @@ export class LogMonitorComponent implements OnInit, OnDestroy, AfterViewInit {
 
     private scrollToBottom(force?: boolean): void {
         if (!this.container?.elementRef?.nativeElement || (!this.lockToEnd && !force)) return;
-        const { scrollHeight } = this.container.elementRef.nativeElement;
-        this.container.elementRef.nativeElement.scrollTop = scrollHeight;
+
+        if (this.scrollTimer) window.clearTimeout(this.scrollTimer);
         this.zone.run(() => {
-            setTimeout(() => {
-                if (this.container.elementRef.nativeElement.scrollHeight !== scrollHeight) {
-                    this.scrollToBottom();
-                }
-            }, 1000);
+            this.scrollTimer = window.setTimeout(() => {
+                const element = this.container?.elementRef?.nativeElement;
+                if (element) element.scrollTop = element.scrollHeight;
+            });
         });
     }
 
     public toggleLock(): void {
         this.lockToEnd = !this.lockToEnd;
-    }
-
-    @HostListener('window:resize')
-    public onResize(): void {
-        // console.warn('test', this.container);
+        if (this.lockToEnd) this.scrollToBottom(true);
     }
 
 }

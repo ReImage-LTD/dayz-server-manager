@@ -1,12 +1,15 @@
 // Base styling for the topnav
 
 .sb-topnav {
-  padding-left: 0;
+  padding: 0 0.75rem;
   height: $topnav-base-height;
   z-index: $zindex-topnav;
+  background: rgba(11, 14, 13, 0.96) !important;
+  border-bottom: 1px solid var(--ops-border, #2c3832);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.22);
   .navbar-brand {
       width: $sidenav-base-width;
-      padding-left: $navbar-padding-x;
+      padding-left: 0.75rem;
       padding-right: $navbar-padding-x;
       margin: 0;
   }

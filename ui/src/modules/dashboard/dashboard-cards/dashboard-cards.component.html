@@ -1,69 +1,73 @@
-<div class="row">
-    <div class="col">
-        <div class="card mb-4">
-            <div class="card-body">Last Update Received: {{ (systemStream | async)?.timestamp ? ((systemStream | async)?.timestamp | date:'dd/MM/yyyy hh:mm:ss') : 'Unknown' }}</div>
+<ng-container *ngIf="{ system: systemStream | async, players: playerStream | async, memory: memStream | async } as metrics">
+    <section class="status-section" aria-labelledby="status-heading">
+        <div class="section-heading">
+            <div>
+                <p class="section-kicker">Status matrix</p>
+                <h2 id="status-heading">Operational health</h2>
+            </div>
+            <p class="freshness" aria-live="polite">
+                <span class="freshness__pulse" aria-hidden="true"></span>
+                <span>Telemetry</span>
+                <strong>{{ metrics.system?.timestamp ? (metrics.system?.timestamp | date:'dd MMM yyyy, HH:mm:ss') : 'Awaiting data' }}</strong>
+            </p>
         </div>
-    </div>
-</div>
-<div class="row">
 
-    <div class="col-xl-3 col-md-6">
-        <sb-card-view-details
-            class="d-flex h-100"
-            link="/dashboard/system"
-            [background]="'flex-grow ' + serverStateToStyle((systemStream | async)?.value?.serverState)"
-        >
-            <div class="card-body">Server State:<br/> {{ (systemStream | async)?.value?.serverState | defaultValue:'Unknown' }}</div>
-        </sb-card-view-details>
-    </div>
+        <div class="row status-grid">
+            <div class="col-xl-3 col-md-6 status-grid__item">
+                <sb-card-view-details
+                    class="d-flex h-100"
+                    link="/dashboard/system"
+                    [background]="'flex-grow operation-card ' + serverStateToStyle(metrics.system?.value?.serverState)"
+                >
+                    <div class="card-body metric-card metric-card--state">
+                        <span class="metric-label">Server state</span>
+                        <strong class="metric-value">{{ metrics.system?.value?.serverState | defaultValue:'Unknown' }}</strong>
+                        <span class="metric-note">DayZ service lifecycle</span>
+                    </div>
+                </sb-card-view-details>
+            </div>
 
-    <div class="col-xl-3 col-md-6">
-        <sb-card-view-details
-            class="d-flex h-100"
-            link="/dashboard/system"
-            background="flex-grow bg-primary"
-        >
-            <div class="card-body">
-                Sytem CPU:
-                <div class="row">
-                    <ngx-gauge  type="arch"
-                                [value]="((systemStream | async)?.value?.system?.cpuTotal) | defaultValue:0"
+            <div class="col-xl-3 col-md-6 status-grid__item">
+                <sb-card-view-details class="d-flex h-100" link="/dashboard/system" background="flex-grow operation-card bg-dark">
+                    <div class="card-body metric-card">
+                        <span class="metric-label">System CPU</span>
+                        <div class="gauge" role="img" aria-label="System CPU utilization percentage">
+                            <ngx-gauge
+                                type="arch"
+                                [value]="metrics.system?.value?.system?.cpuTotal | defaultValue:0"
                                 append="%"
                                 [size]="165"
-                                style="margin-left: auto; margin-right: auto;"
-                    ></ngx-gauge>
-                </div>
+                            ></ngx-gauge>
+                        </div>
+                        <span class="metric-note">Total host utilization</span>
+                    </div>
+                </sb-card-view-details>
             </div>
-        </sb-card-view-details>
-    </div>
 
-    <div class="col-xl-3 col-md-6">
-        <sb-card-view-details
-            class="d-flex h-100"
-            link="/dashboard/system"
-            background="flex-grow bg-primary"
-        >
-            <div class="card-body">
-                Sytem RAM: ~{{ (systemStream | async)?.value?.system?.mem | defaultValue:'Unknown' }} MB / {{ (systemStream | async)?.value?.system?.memTotal | defaultValue:'Unknown' }} MB
-                <div class="row">
-                    <ngx-gauge  type="arch"
-                                [value]="(memStream | async) | defaultValue:0"
-                                append="%"
-                                [size]="165"
-                                style="margin-left: auto; margin-right: auto;"
-                    ></ngx-gauge>
-                </div>
+            <div class="col-xl-3 col-md-6 status-grid__item">
+                <sb-card-view-details class="d-flex h-100" link="/dashboard/system" background="flex-grow operation-card bg-dark">
+                    <div class="card-body metric-card">
+                        <span class="metric-label">System RAM</span>
+                        <div class="gauge" role="img" aria-label="System memory utilization percentage">
+                            <ngx-gauge type="arch" [value]="metrics.memory | defaultValue:0" append="%" [size]="165"></ngx-gauge>
+                        </div>
+                        <span class="metric-note">
+                            {{ metrics.system?.value?.system?.mem | defaultValue:'Unknown' }} MB of
+                            {{ metrics.system?.value?.system?.memTotal | defaultValue:'Unknown' }} MB
+                        </span>
+                    </div>
+                </sb-card-view-details>
             </div>
-        </sb-card-view-details>
-    </div>
 
-    <div class="col-xl-3 col-md-6">
-        <sb-card-view-details
-            class="d-flex h-100"
-            link="/dashboard/players"
-            background="flex-grow bg-primary"
-        >
-            <div class="card-body">Online Players:<br/> {{ (playerStream | async)?.value?.length | defaultValue:'Unknown' }}</div>
-        </sb-card-view-details>
-    </div>
-</div>
+            <div class="col-xl-3 col-md-6 status-grid__item">
+                <sb-card-view-details class="d-flex h-100" link="/dashboard/players" background="flex-grow operation-card bg-dark">
+                    <div class="card-body metric-card metric-card--players">
+                        <span class="metric-label">Online players</span>
+                        <strong class="metric-value metric-value--number">{{ metrics.players?.value?.length | defaultValue:'Unknown' }}</strong>
+                        <span class="metric-note">Active RCON sessions</span>
+                    </div>
+                </sb-card-view-details>
+            </div>
+        </div>
+    </section>
+</ng-container>

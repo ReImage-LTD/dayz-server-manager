@@ -1,57 +1,156 @@
-$red: #C0392B;
-$red-light: #E74C3C;
-
-$orange: #F39C12;
-$orange-light: #F1C40F;
-
-$green: #27AE60;
-$green-light: #2ECC71;
-
-$blue: #2980B9;
-$blue-light: #3498DB;
-
-$light: #ECF0F1;
-$dark: #212121;
-
-$dark-title-bar: #1f1f1f;
-
-$dark-light: #3c3c3c;
-
 :host {
-    flex-grow: 1;
+    --ops-surface: var(--operations-surface, #111a24);
+    --ops-border: var(--operations-border, #28394a);
+    --ops-text: var(--operations-text, #e8f0f7);
+    --ops-muted: var(--operations-muted, #8fa2b5);
+    --ops-accent: var(--operations-accent, #35d0ba);
+    background: #070c11;
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    position: relative;
 }
 
-.title-bar{
-  padding: 5px;
-  font-weight: 600;
-  display: flex;
+.terminal-toolbar {
+    align-items: center;
+    background: var(--ops-surface);
+    border-bottom: 1px solid var(--ops-border);
+    display: flex;
+    flex: 0 0 auto;
+    gap: 1rem;
+    justify-content: space-between;
+    min-height: 3.5rem;
+    padding: .65rem .9rem;
 }
 
-.dark-theme.title-bar{
-  border-bottom: solid 1px $dark-light;
-  background: $dark-title-bar ;
+.terminal-title {
+    align-items: center;
+    display: flex;
+    gap: .7rem;
+    min-width: 0;
 }
 
-.dark-theme {
+.terminal-mark {
+    color: var(--ops-accent);
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+    font-size: .8rem;
+    font-weight: 700;
+}
 
-  color: $light;
-  background: $dark;
+.terminal-title h3 {
+    color: var(--ops-text);
+    font-size: .82rem;
+    margin: 0;
+}
 
-  .msg-info {
-    color: $blue-light;
-  }
+.terminal-title div > span {
+    color: var(--ops-muted);
+    display: block;
+    font-size: .66rem;
+    margin-top: .1rem;
+}
 
-  .msg-err {
-    color: $red-light;
-  }
+.follow-control {
+    align-items: center;
+    background: transparent;
+    border: 1px solid var(--ops-border);
+    border-radius: 2rem;
+    color: var(--ops-muted);
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: .69rem;
+    font-weight: 700;
+    gap: .45rem;
+    min-height: 2rem;
+    padding: .35rem .7rem;
+}
 
-  .msg-success {
-    color: $green-light;
-  }
+.follow-control:hover,
+.follow-control:focus-visible,
+.follow-control.is-active {
+    border-color: var(--ops-accent);
+    color: var(--ops-accent);
+}
 
-  .msg-warn {
-    color: $orange-light;
-  }
+.follow-control.is-active {
+    background: rgba(53, 208, 186, .08);
+}
+
+.follow-control:focus-visible,
+.terminal-viewport:focus-visible {
+    box-shadow: 0 0 0 .2rem rgba(53, 208, 186, .22);
+    outline: 0;
+}
+
+.terminal-viewport {
+    background:
+        linear-gradient(rgba(53, 208, 186, .025) 1px, transparent 1px),
+        #070c11;
+    background-size: 100% 22px;
+    color: #cbd8e3;
+    flex: 1 1 auto;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+    font-size: .73rem;
+    line-height: 22px;
+    min-height: 24rem;
+    overflow: auto;
+    scrollbar-color: #31485a #0a1118;
+    scrollbar-width: thin;
+}
+
+.log-line {
+    display: flex;
+    height: 22px;
+    min-width: max-content;
+    white-space: nowrap;
+}
+
+.log-line:hover {
+    background: rgba(53, 208, 186, .055);
+}
+
+.line-number {
+    border-right: 1px solid rgba(40, 57, 74, .7);
+    color: #53697b;
+    flex: 0 0 4.25rem;
+    margin-right: .85rem;
+    padding-right: .65rem;
+    text-align: right;
+    user-select: none;
+}
+
+.line-message {
+    padding-right: 1rem;
+}
+
+.empty-stream {
+    color: var(--ops-muted);
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+    font-size: .75rem;
+    left: 50%;
+    position: absolute;
+    top: 55%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+
+.empty-stream span {
+    color: var(--ops-accent);
+    margin-right: .35rem;
+}
+
+@media (max-width: 575.98px) {
+    .follow-control span {
+        max-width: 6.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .line-number {
+        flex-basis: 3rem;
+    }
 }

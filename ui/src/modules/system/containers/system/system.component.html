@@ -1,78 +1,126 @@
 <sb-layout-dashboard>
     <sb-dashboard-head title="System" [hideBreadcrumbs]="false"></sb-dashboard-head>
 
-    <div class="row">
-        <div class="col-xl-6">
-            <sb-card>
-                <div class="card-header">
-                    <fa-icon class="mr-1" [icon]='["fas", "chart-area"]'></fa-icon>System CPU
-                </div>
-                <div class="card-body">
-                    <sb-charts-area [chartConf]="(commonService.chart('system', 'cpu') | async)!"></sb-charts-area>
-                </div>
-                <div class="card-footer small text-muted">Last Updated: {{ (getSystemFetcher().lastUpdate | async) | date:'medium' }}</div>
-            </sb-card>
-        </div>
-        <div class="col-xl-6">
-            <sb-card>
-                <div class="card-header">
-                    <fa-icon class="mr-1" [icon]='["fas", "chart-area"]'></fa-icon>System RAM
-                </div>
-                <div class="card-body">
-                    <sb-charts-area [chartConf]="(commonService.chart('system', 'ram') | async)!"></sb-charts-area>
-                </div>
-                <div class="card-footer small text-muted">Last Updated: {{ (getSystemFetcher().lastUpdate | async) | date:'medium' }}</div>
-            </sb-card>
-        </div>
-    </div>
+    <div class="system-console" *ngIf="{ updated: (getSystemFetcher().lastUpdate | async) } as telemetry">
+        <header class="console-header">
+            <div>
+                <p class="eyebrow">Resource telemetry</p>
+                <h1>System performance</h1>
+                <p class="console-header__copy">Host, DayZ server, and manager utilization over the last three hours.</p>
+            </div>
+            <div class="freshness" aria-live="polite">
+                <span class="freshness__pulse" aria-hidden="true"></span>
+                <span>Last telemetry</span>
+                <strong>{{ telemetry.updated ? (telemetry.updated | date:'medium') : 'Awaiting data' }}</strong>
+            </div>
+        </header>
 
-    <div class="row">
-        <div class="col-lg-6">
-            <sb-card>
-                <div class="card-header">
-                    <fa-icon class="mr-1" [icon]='["fas", "chart-bar"]'></fa-icon>DayZ CPU
+        <section class="telemetry-group" aria-labelledby="host-telemetry-heading">
+            <div class="group-heading">
+                <div>
+                    <p>Node 01</p>
+                    <h2 id="host-telemetry-heading">Host resources</h2>
                 </div>
-                <div class="card-body">
-                    <sb-charts-area [chartConf]="(commonService.chart('process', 'cpu') | async)!"></sb-charts-area>
+                <span>Aggregate system load</span>
+            </div>
+            <div class="row telemetry-grid">
+                <div class="col-xl-6 telemetry-grid__item">
+                    <sb-card>
+                        <div class="card-header" id="system-cpu-heading">
+                            <span><fa-icon class="mr-1" [icon]='["fas", "chart-area"]'></fa-icon>System CPU</span>
+                            <small>Percent utilization</small>
+                        </div>
+                        <div class="card-body" role="group" aria-labelledby="system-cpu-heading">
+                            <sb-charts-area [chartConf]="(commonService.chart('system', 'cpu') | async)!"></sb-charts-area>
+                        </div>
+                        <div class="card-footer">Updated {{ telemetry.updated ? (telemetry.updated | date:'medium') : 'when telemetry is received' }}</div>
+                    </sb-card>
                 </div>
-                <div class="card-footer small text-muted">Last Updated: {{ (getPlayerFetcher().lastUpdate | async) | date:'medium' }}</div>
-            </sb-card>
-        </div>
-        <div class="col-lg-6">
-            <sb-card>
-                <div class="card-header">
-                    <fa-icon class="mr-1" [icon]='["fas", "chart-pie"]'></fa-icon>DayZ RAM
+                <div class="col-xl-6 telemetry-grid__item">
+                    <sb-card>
+                        <div class="card-header" id="system-ram-heading">
+                            <span><fa-icon class="mr-1" [icon]='["fas", "chart-area"]'></fa-icon>System RAM</span>
+                            <small>Percent utilization</small>
+                        </div>
+                        <div class="card-body" role="group" aria-labelledby="system-ram-heading">
+                            <sb-charts-area [chartConf]="(commonService.chart('system', 'ram') | async)!"></sb-charts-area>
+                        </div>
+                        <div class="card-footer">Updated {{ telemetry.updated ? (telemetry.updated | date:'medium') : 'when telemetry is received' }}</div>
+                    </sb-card>
                 </div>
-                <div class="card-body">
-                    <sb-charts-area [chartConf]="(commonService.chart('process', 'ram') | async)!"></sb-charts-area>
-                </div>
-                <div class="card-footer small text-muted">Last Updated: {{ (getSystemFetcher().lastUpdate | async) | date:'medium' }}</div>
-            </sb-card>
-        </div>
-    </div>
+            </div>
+        </section>
 
-    <div class="row">
-        <div class="col-lg-6">
-            <sb-card>
-                <div class="card-header">
-                    <fa-icon class="mr-1" [icon]='["fas", "chart-bar"]'></fa-icon>Manager CPU
+        <section class="telemetry-group" aria-labelledby="dayz-telemetry-heading">
+            <div class="group-heading">
+                <div>
+                    <p>Workload 01</p>
+                    <h2 id="dayz-telemetry-heading">DayZ process</h2>
                 </div>
-                <div class="card-body">
-                    <sb-charts-area [chartConf]="(commonService.chart('manager', 'cpu') | async)!"></sb-charts-area>
+                <span>Game server footprint</span>
+            </div>
+            <div class="row telemetry-grid">
+                <div class="col-lg-6 telemetry-grid__item">
+                    <sb-card>
+                        <div class="card-header" id="dayz-cpu-heading">
+                            <span><fa-icon class="mr-1" [icon]='["fas", "chart-bar"]'></fa-icon>DayZ CPU</span>
+                            <small>Percent utilization</small>
+                        </div>
+                        <div class="card-body" role="group" aria-labelledby="dayz-cpu-heading">
+                            <sb-charts-area [chartConf]="(commonService.chart('process', 'cpu') | async)!"></sb-charts-area>
+                        </div>
+                        <div class="card-footer">Updated {{ telemetry.updated ? (telemetry.updated | date:'medium') : 'when telemetry is received' }}</div>
+                    </sb-card>
                 </div>
-                <div class="card-footer small text-muted">Last Updated: {{ (getSystemFetcher().lastUpdate | async) | date:'medium' }}</div>
-            </sb-card>
-        </div>
-        <div class="col-lg-6">
-            <sb-card>
-                <div class="card-header">
-                    <fa-icon class="mr-1" [icon]='["fas", "chart-pie"]'></fa-icon>Manager RAM
+                <div class="col-lg-6 telemetry-grid__item">
+                    <sb-card>
+                        <div class="card-header" id="dayz-ram-heading">
+                            <span><fa-icon class="mr-1" [icon]='["fas", "chart-pie"]'></fa-icon>DayZ RAM</span>
+                            <small>Host memory share</small>
+                        </div>
+                        <div class="card-body" role="group" aria-labelledby="dayz-ram-heading">
+                            <sb-charts-area [chartConf]="(commonService.chart('process', 'ram') | async)!"></sb-charts-area>
+                        </div>
+                        <div class="card-footer">Updated {{ telemetry.updated ? (telemetry.updated | date:'medium') : 'when telemetry is received' }}</div>
+                    </sb-card>
                 </div>
-                <div class="card-body">
-                    <sb-charts-area [chartConf]="(commonService.chart('manager', 'ram') | async)!"></sb-charts-area>
+            </div>
+        </section>
+
+        <section class="telemetry-group" aria-labelledby="manager-telemetry-heading">
+            <div class="group-heading">
+                <div>
+                    <p>Control plane</p>
+                    <h2 id="manager-telemetry-heading">Manager process</h2>
                 </div>
-                <div class="card-footer small text-muted">Last Updated: {{ (getSystemFetcher().lastUpdate | async) | date:'medium' }}</div>
-            </sb-card>
-        </div>
+                <span>Management service footprint</span>
+            </div>
+            <div class="row telemetry-grid">
+                <div class="col-lg-6 telemetry-grid__item">
+                    <sb-card>
+                        <div class="card-header" id="manager-cpu-heading">
+                            <span><fa-icon class="mr-1" [icon]='["fas", "chart-bar"]'></fa-icon>Manager CPU</span>
+                            <small>Percent utilization</small>
+                        </div>
+                        <div class="card-body" role="group" aria-labelledby="manager-cpu-heading">
+                            <sb-charts-area [chartConf]="(commonService.chart('manager', 'cpu') | async)!"></sb-charts-area>
+                        </div>
+                        <div class="card-footer">Updated {{ telemetry.updated ? (telemetry.updated | date:'medium') : 'when telemetry is received' }}</div>
+                    </sb-card>
+                </div>
+                <div class="col-lg-6 telemetry-grid__item">
+                    <sb-card>
+                        <div class="card-header" id="manager-ram-heading">
+                            <span><fa-icon class="mr-1" [icon]='["fas", "chart-pie"]'></fa-icon>Manager RAM</span>
+                            <small>Host memory share</small>
+                        </div>
+                        <div class="card-body" role="group" aria-labelledby="manager-ram-heading">
+                            <sb-charts-area [chartConf]="(commonService.chart('manager', 'ram') | async)!"></sb-charts-area>
+                        </div>
+                        <div class="card-footer">Updated {{ telemetry.updated ? (telemetry.updated | date:'medium') : 'when telemetry is received' }}</div>
+                    </sb-card>
+                </div>
+            </div>
+        </section>
     </div>
 </sb-layout-dashboard>

@@ -10,6 +10,7 @@ import { LogEntryEvent } from '../types/log-reader';
 import { MetricEntryEvent } from '../types/metrics';
 import { DiscordMessage } from '../types/discord';
 import { GameUpdatedStatus, ModUpdatedStatus } from '../types/steamcmd';
+import { TrackedOperation } from '../types/operations';
 
 @singleton()
 @injectable()
@@ -33,6 +34,7 @@ export class EventBus extends IService {
     public emit(name: InternalEventTypes.LOG_ENTRY, logEntryEvent: LogEntryEvent): void;
     public emit(name: InternalEventTypes.MOD_UPDATED, status: ModUpdatedStatus): void;
     public emit(name: InternalEventTypes.GAME_UPDATED, status: GameUpdatedStatus): void;
+    public emit(name: InternalEventTypes.OPERATION_UPDATED, operation: TrackedOperation): void;
     public emit(
         name: InternalEventTypes.INTERNAL_MOD_INSTALL
         | InternalEventTypes.GET_INTERNAL_MODS,
@@ -48,6 +50,7 @@ export class EventBus extends IService {
     public on(name: InternalEventTypes.LOG_ENTRY, listener: (logEntryEvent: LogEntryEvent) => Promise<any>): Listener;
     public on(name: InternalEventTypes.MOD_UPDATED, listener: (status: ModUpdatedStatus) => Promise<any>): Listener;
     public on(name: InternalEventTypes.GAME_UPDATED, listener: (status: GameUpdatedStatus) => Promise<any>): Listener;
+    public on(name: InternalEventTypes.OPERATION_UPDATED, listener: (operation: TrackedOperation) => Promise<any>): Listener;
     public on(
         name: InternalEventTypes.GET_INTERNAL_MODS
         | InternalEventTypes.INTERNAL_MOD_INSTALL,

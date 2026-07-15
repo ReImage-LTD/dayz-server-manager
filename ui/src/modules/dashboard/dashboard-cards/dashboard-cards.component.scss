@@ -1,1 +1,134 @@
-@import 'styles/variables.scss';
+:host {
+    display: block;
+    margin-bottom: 1.75rem;
+}
+
+.status-section {
+    min-width: 0;
+}
+
+.section-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.85rem;
+}
+
+.section-kicker,
+.metric-label {
+    color: var(--ops-accent, #5cc8ff);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.section-kicker {
+    margin: 0 0 0.2rem;
+}
+
+h2 {
+    margin: 0;
+    color: var(--ops-text-strong, #ffffff);
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.freshness {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+    color: var(--ops-text-muted, #9cabb9);
+    font-size: 0.72rem;
+}
+
+.freshness strong {
+    color: var(--ops-text, #e7edf3);
+    font-weight: 500;
+}
+
+.freshness__pulse {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--ops-success, #53d18b);
+    box-shadow: 0 0 0.6rem var(--ops-success, #53d18b);
+}
+
+.status-grid {
+    margin-right: -0.5rem;
+    margin-left: -0.5rem;
+}
+
+.status-grid__item {
+    margin-bottom: 1rem;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+}
+
+sb-card-view-details {
+    min-width: 0;
+}
+
+.metric-card {
+    display: flex;
+    min-height: 13rem;
+    align-items: stretch;
+    flex-direction: column;
+    padding: 1.1rem 1.15rem;
+    border-top: 2px solid var(--ops-accent, #5cc8ff);
+    background: var(--ops-surface-raised, #172230);
+    color: var(--ops-text-strong, #ffffff);
+}
+
+.metric-card--state,
+.metric-card--players {
+    justify-content: space-between;
+}
+
+.metric-value {
+    overflow: hidden;
+    margin: 1.35rem 0;
+    font-size: 1.45rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+}
+
+.metric-value--number {
+    font-size: 3.5rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+
+.metric-note {
+    margin-top: auto;
+    color: var(--ops-text-muted, rgba(255, 255, 255, 0.72));
+    font-size: 0.75rem;
+}
+
+.gauge {
+    display: flex;
+    min-height: 9.1rem;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+@media (max-width: 575.98px) {
+    .section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .freshness {
+        flex-wrap: wrap;
+    }
+
+    .metric-card {
+        min-height: 11.5rem;
+    }
+}

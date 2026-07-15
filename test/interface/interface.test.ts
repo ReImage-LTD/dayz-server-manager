@@ -1,7 +1,7 @@
 import { expect } from '../expect';
 import { ImportMock } from 'ts-mock-imports'
 import { Interface } from '../../src/interface/interface';
-import { Request } from '../../src/types/interface';
+import { Request, Response } from '../../src/types/interface';
 import { StubInstance, disableConsole, enableConsole, stubClass } from '../util';
 import { DependencyContainer, Lifecycle, container } from 'tsyringe';
 import { Manager } from '../../src/control/manager';
@@ -15,6 +15,9 @@ import { MissionFiles } from '../../src/services/mission-files';
 import { ConfigFileHelper } from '../../src/config/config-file-helper';
 import { ServerDetector } from '../../src/services/server-detector';
 import { SystemReporter } from '../../src/services/system-reporter';
+import { OperationConflictError, Operations } from '../../src/services/operations';
+import { NodeRegistry } from '../../src/services/node-registry';
+import { FleetDispatcher } from '../../src/services/fleet-dispatcher';
 
 
 describe('Test Interface', () => {
@@ -32,6 +35,9 @@ describe('Test Interface', () => {
     let backups: StubInstance<Backups>;
     let missionFiles: StubInstance<MissionFiles>;
     let configFileHelper: StubInstance<ConfigFileHelper>;
+    let operations: StubInstance<Operations>;
+    let nodeRegistry: StubInstance<NodeRegistry>;
+    let fleetDispatcher: StubInstance<FleetDispatcher>;
 
     before(() => {
         disableConsole();
@@ -59,6 +65,9 @@ describe('Test Interface', () => {
         injector.register(Backups, stubClass(Backups), { lifecycle: Lifecycle.Singleton });
         injector.register(MissionFiles, stubClass(MissionFiles), { lifecycle: Lifecycle.Singleton });
         injector.register(ConfigFileHelper, stubClass(ConfigFileHelper), { lifecycle: Lifecycle.Singleton });
+        injector.register(Operations, stubClass(Operations), { lifecycle: Lifecycle.Singleton });
+        injector.register(NodeRegistry, stubClass(NodeRegistry), { lifecycle: Lifecycle.Singleton });
+        injector.register(FleetDispatcher, stubClass(FleetDispatcher), { lifecycle: Lifecycle.Singleton });
         
         manager = injector.resolve(Manager) as any;
         manager.config = {
@@ -105,6 +114,9 @@ describe('Test Interface', () => {
         backups = injector.resolve(Backups) as any;
         missionFiles = injector.resolve(MissionFiles) as any;
         configFileHelper = injector.resolve(ConfigFileHelper) as any;
+        operations = injector.resolve(Operations) as any;
+        nodeRegistry = injector.resolve(NodeRegistry) as any;
+        fleetDispatcher = injector.resolve(FleetDispatcher) as any;
     });
 
     it('execute-non existing', async () => {
@@ -518,7 +530,7 @@ describe('Test Interface', () => {
     });
 
     it('execute-config', async () => {
-        configFileHelper.getConfigFileContent.returns('{}');
+        configFileHelper.getRedactedConfig.returns('{}');
         
         const handler = injector.resolve(Interface);
         const request = {
@@ -595,6 +607,141 @@ describe('Test Interface', () => {
 
         expect(response.status).to.equal(200);
         expect(backups.getBackups.called).to.be.true;
+    });
+
+    it('exposes tracked backups, operations, and local nodes', async () => {
+        const queued = { id: 'operation-id', status: 'queued' } as any;
+        operations.createOperation.returns(queued);
+        operations.startOperation.returns({ ...queued, status: 'running' });
+        backups.createBackup.resolves({ id: 'backup-id' } as any);
+        nodeRegistry.list.returns([{ descriptor: { id: 'local', type: 'local' }, online: true }] as any);
+        const handler = injector.resolve(Interface);
+
+        const createResponse = await handler.execute({ resource: 'createbackup', user: 'admin' } as Request);
+        const nodesResponse = await handler.execute({ resource: 'nodes', user: 'admin' } as Request);
+
+        expect(createResponse.body).to.equal(queued);
+        expect(operations.createOperation.calledWith('backup.create', 'missions')).to.be.true;
+        expect(nodesResponse.status).to.equal(200);
+        expect(nodeRegistry.list.called).to.be.true;
+    });
+
+    it('redacts config bodies from audit metrics', async () => {
+        const handler = injector.resolve(Interface);
+        await handler.execute({
+            resource: 'updateconfig',
+            user: 'admin',
+            body: { config: '{"password":"secret"}' },
+        } as Request);
+
+        expect(metrics.pushMetricValue.firstCall.args[1].value.body).to.equal('[REDACTED]');
+    });
+
+    it('redacts forwarded config secrets from fleet audit metrics', async () => {
+        manager.getUserLevel.returns('admin');
+        fleetDispatcher.dispatch.resolves(new Response(200, true));
+        await injector.resolve(Interface).execute({
+            resource: 'fleetdispatch',
+            user: 'admin',
+            body: {
+                nodeId: 'remote',
+                resource: 'updateconfig',
+                body: { config: '{"sharedSecret":"fleet-secret"}' },
+            },
+        } as Request);
+
+        const auditBody = metrics.pushMetricValue.firstCall.args[1].value.body;
+        expect(auditBody.body).to.equal('[REDACTED]');
+        expect(JSON.stringify(auditBody)).not.to.include('fleet-secret');
+    });
+
+    it('dispatches authorized fleet commands without forwarding credentials', async () => {
+        manager.getUserLevel.returns('manage');
+        fleetDispatcher.dispatch.resolves(new Response(200, { name: 'remote' }));
+        const response = await injector.resolve(Interface).execute({
+            resource: 'fleetdispatch',
+            user: 'admin',
+            body: {
+                nodeId: 'remote',
+                resource: 'serverinfo',
+                query: { detailed: true },
+            },
+        } as Request);
+
+        expect(response.status).to.equal(200);
+        const command = fleetDispatcher.dispatch.firstCall.args[1];
+        expect(command.authorizationLevel).to.equal('manage');
+        expect(command.requestedBy).to.equal('admin');
+        expect(JSON.stringify(command)).not.to.include('password');
+    });
+
+    it('forbids recursive fleet dispatch and privilege escalation', async () => {
+        manager.getUserLevel.returns('view');
+        manager.isUserOfLevel.callsFake((_user, level) => level === 'view');
+        const handler = injector.resolve(Interface);
+
+        const recursive = await handler.execute({
+            resource: 'fleetdispatch',
+            user: 'admin',
+            body: { nodeId: 'remote', resource: 'fleetdispatch' },
+        } as Request);
+        const escalated = await handler.execute({
+            resource: 'fleetdispatch',
+            user: 'admin',
+            body: { nodeId: 'remote', resource: 'restart' },
+        } as Request);
+
+        expect(recursive.status).to.equal(400);
+        expect(escalated.status).to.equal(401);
+        expect(fleetDispatcher.dispatch).not.to.have.been.called;
+    });
+
+    it('caps authenticated fleet execution at the target command RBAC level', async () => {
+        const handler = injector.resolve(Interface);
+        const response = await handler.executeFleetCommand({
+            resource: 'restart',
+            method: 'post',
+            authorizationLevel: 'view',
+            requestedBy: 'viewer',
+        }, 'remote');
+        const recursive = await handler.executeFleetCommand({
+            resource: 'fleetdispatch',
+            method: 'post',
+            authorizationLevel: 'admin',
+            requestedBy: 'admin',
+        }, 'remote');
+
+        expect(response.status).to.equal(401);
+        expect(recursive.status).to.equal(400);
+        expect(monitor.killServer).not.to.have.been.called;
+    });
+
+    it('guards restore, preserves the restart lock, and optionally creates a backup', async () => {
+        serverDetector.isServerRunning.resolves(false);
+        monitor.killServer.resolves(true);
+        monitor.restartLock = true;
+        backups.createBackup.resolves({ id: 'pre-restore' } as any);
+        backups.restoreBackup.resolves();
+        const handler = injector.resolve(Interface);
+
+        await handler['restoreBackup']('backup-id', true, true);
+
+        expect(monitor.killServer.calledWith(true)).to.be.true;
+        expect(backups.createBackup.called).to.be.true;
+        expect(backups.restoreBackup.calledWith('backup-id')).to.be.true;
+        expect(monitor.restartLock).to.be.true;
+    });
+
+    it('returns a conflict for an active tracked operation', async () => {
+        const active = { id: 'active', resource: 'missions' } as any;
+        operations.createOperation.throws(new OperationConflictError(active));
+        const response = await injector.resolve(Interface).execute({
+            resource: 'createbackup',
+            user: 'admin',
+        } as Request);
+
+        expect(response.status).to.equal(409);
+        expect((response.body as any).operation).to.equal(active);
     });
 
     it('execute-writemissionfile', async () => {

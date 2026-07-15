@@ -4,3 +4,123 @@
 .page-title {
     color: #fff;
 }
+
+:host {
+    display: block;
+}
+
+.toolbar-button {
+    display: inline-grid;
+    place-items: center;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    color: var(--ops-text-muted, #9daaa3);
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: var(--ops-text, #edf2ef);
+}
+
+.brand-mark {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    background: var(--ops-accent, #a8bd76);
+    border-radius: 0.25rem;
+    color: #101510;
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+}
+
+.brand-copy {
+    display: grid;
+    line-height: 1.05;
+}
+
+.brand-copy strong {
+    font-size: 0.9rem;
+}
+
+.brand-copy small,
+.server-context small {
+    color: var(--ops-text-subtle, #77847d);
+    font-size: 0.62rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.page-context {
+    display: grid;
+    margin-left: 1.25rem;
+    line-height: 1.1;
+}
+
+.context-kicker {
+    color: var(--ops-text-subtle, #77847d);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.server-context {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-left: auto;
+    padding-right: 1rem;
+    border-right: 1px solid var(--ops-border, #2c3832);
+}
+
+.server-context > span:last-child {
+    display: grid;
+    line-height: 1.1;
+}
+
+.state-indicator {
+    width: 0.5rem;
+    height: 0.5rem;
+    background: var(--ops-success, #79b886);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(121, 184, 134, 0.12);
+}
+
+.refresh-control {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-left: 1rem;
+    white-space: nowrap;
+}
+
+.refresh-control label {
+    margin: 0;
+    color: var(--ops-text-muted, #9daaa3);
+    font-size: 0.72rem;
+}
+
+.refresh-control select {
+    width: auto;
+    min-width: 5.5rem;
+}
+
+@media (max-width: 767.98px) {
+    .brand-copy,
+    .refresh-control label {
+        display: none;
+    }
+
+    .navbar-brand {
+        width: auto;
+        padding-right: 0;
+    }
+
+    .refresh-control {
+        margin-left: auto;
+    }
+}

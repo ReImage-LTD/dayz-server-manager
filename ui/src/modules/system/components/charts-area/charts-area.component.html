@@ -1,2 +1,22 @@
-<canvas #myAreaChart></canvas>
-<div *ngIf="!chartConf$">No Data</div>
+<div class="chart-shell" [attr.aria-busy]="!chartConf$">
+    <canvas
+        #myAreaChart
+        class="chart-canvas"
+        [class.chart-canvas--hidden]="!hasData"
+        [attr.aria-hidden]="!hasData"
+        role="img"
+        aria-label="Utilization trend chart"
+    >Utilization trend chart</canvas>
+
+    <div class="chart-state" *ngIf="!chartConf$" role="status">
+        <span class="chart-state__loader" aria-hidden="true"></span>
+        <strong>Loading telemetry</strong>
+        <small>Waiting for the metrics stream</small>
+    </div>
+
+    <div class="chart-state" *ngIf="chartConf$ && !hasData" role="status">
+        <span class="chart-state__empty" aria-hidden="true"></span>
+        <strong>No telemetry yet</strong>
+        <small>Chart data will appear after the next sample</small>
+    </div>
+</div>

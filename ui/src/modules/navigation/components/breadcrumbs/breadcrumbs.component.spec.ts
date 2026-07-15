@@ -1,10 +1,16 @@
 import { Component, DebugElement, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { NavigationService } from '@modules/navigation/services';
-import { NavigationServiceStub } from '@testing/stubs';
+import { BehaviorSubject } from 'rxjs';
 
+import { SBRouteData } from '../../models';
+import { NavigationService } from '../../services/navigation.service';
 import { BreadcrumbsComponent } from './breadcrumbs.component';
+
+const routeData = new BehaviorSubject<SBRouteData>({ breadcrumbs: [] });
+const navigationServiceStub = {
+    routeData$: () => routeData.asObservable(),
+};
 
 @Component({
     template: `
@@ -32,10 +38,11 @@ describe('BreadcrumbsComponent', () => {
     let navigationService: NavigationService;
 
     beforeEach(() => {
+        routeData.next({ breadcrumbs: [] });
         TestBed.configureTestingModule({
             declarations: [TestHostComponent, BreadcrumbsComponent],
             imports: [NoopAnimationsModule],
-            providers: [{ provide: NavigationService, useValue: NavigationServiceStub }],
+            providers: [{ provide: NavigationService, useValue: navigationServiceStub }],
             schemas: [NO_ERRORS_SCHEMA],
         }).compileComponents();
 
@@ -55,5 +62,11 @@ describe('BreadcrumbsComponent', () => {
 
     it('should display the component', () => {
         expect(hostComponentNE.querySelector('sb-breadcrumbs')).toEqual(jasmine.anything());
+    });
+
+    it('tracks breadcrumbs from navigation state', () => {
+        routeData.next({ breadcrumbs: [{ text: 'Dashboard', active: true }] });
+
+        expect(component.breadcrumbs).toEqual([{ text: 'Dashboard', active: true }]);
     });
 });

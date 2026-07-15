@@ -4,7 +4,13 @@ import { AuthService } from '../../auth/services/auth.service';
 
 import { of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
+import { TrackedOperation } from '../../app-common/models';
+
+export interface BackupSummary {
+    id: string;
+    file: string;
+    mtime: number;
+}
 
 
 @Injectable({ providedIn: 'root' })
@@ -43,7 +49,36 @@ export class MaintenanceService {
     }
 
     public async createBackup(): Promise<boolean> {
-        return this.execute('backup');
+        return this.execute('createbackup');
+    }
+
+    public getBackups(): Promise<BackupSummary[]> {
+        return this.httpClient.get<BackupSummary[]>(
+            '/api/getbackups',
+            {
+                headers: this.auth.getAuthHeaders(),
+                withCredentials: true,
+            },
+        ).pipe(
+            catchError(() => of([])),
+        ).toPromise();
+    }
+
+    public getOperations(): Promise<TrackedOperation[]> {
+        return this.httpClient.get<TrackedOperation[]>(
+            '/api/operations',
+            {
+                headers: this.auth.getAuthHeaders(),
+                params: { limit: '20' },
+                withCredentials: true,
+            },
+        ).pipe(
+            catchError(() => of([])),
+        ).toPromise();
+    }
+
+    public restoreBackup(id: string, createBackup: boolean, restart: boolean): Promise<boolean> {
+        return this.execute('restorebackup', { id, createBackup, restart });
     }
 
     public async lockServer(): Promise<boolean> {

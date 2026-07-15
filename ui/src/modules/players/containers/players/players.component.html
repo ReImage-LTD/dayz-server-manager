@@ -1,233 +1,198 @@
 <sb-layout-dashboard>
     <sb-dashboard-head title="Players" [hideBreadcrumbs]="false"></sb-dashboard-head>
-    <div class="col-md-12">
-        <h3>ID Calculator</h3>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="row">
-                    <div class="col">
-                        Steam64 ID:
+
+    <section class="operations-console" aria-labelledby="player-operations-heading">
+        <div class="console-heading">
+            <div>
+                <span class="eyebrow">Identity control</span>
+                <h3 id="player-operations-heading">Player operations</h3>
+            </div>
+            <span class="console-state">LIVE ADMIN</span>
+        </div>
+
+        <div class="operations-grid">
+            <div class="identity-panel">
+                <div class="panel-heading">
+                    <div>
+                        <span class="panel-index">01</span>
+                        <h4>Identity resolver</h4>
                     </div>
-                    <div class="col">
-                        <input class="form-control ml-2" type="text" name="Steam64ID"
+                    <span class="panel-hint">Enter Steam64 or DayZ ID</span>
+                </div>
+
+                <div class="identity-fields">
+                    <div class="form-group">
+                        <label for="steam64-id">Steam64 ID</label>
+                        <input id="steam64-id" class="form-control console-input" type="text" name="Steam64ID"
+                            inputmode="numeric" autocomplete="off" placeholder="17-digit Steam ID"
                             [(ngModel)]="steam64Input" />
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col">
-                        DayZ ID:
+                    <div class="form-group">
+                        <label for="dayz-id">DayZ ID</label>
+                        <input id="dayz-id" class="form-control console-input" type="text" name="DayZID"
+                            autocomplete="off" placeholder="44-character DayZ ID"
+                            [(ngModel)]="dayzId" />
                     </div>
-                    <div class="col">
-                        <input
-                            class="form-control ml-2" type="text"
-                            [(ngModel)]="dayzId"
-                        />
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col">
-                        BE GUID:
-                    </div>
-                    <div class="col">
-                        <input
-                            class="form-control ml-2" type="text"
-                            [(ngModel)]="beGuid"
-                        />
+                    <div class="form-group identity-field-wide">
+                        <label for="be-guid">BE GUID</label>
+                        <input id="be-guid" class="form-control console-input" type="text" name="BEGUID"
+                            autocomplete="off" placeholder="Resolved BattlEye GUID"
+                            [(ngModel)]="beGuid" />
                     </div>
                 </div>
             </div>
-            <div class="col-md-6" title="Either Steam64 or DayZ ID must be enetered to execute actions.">
-                <div class="row">
-                    <div class="col">
-                        <button class="btn btn-danger"
-                            [disabled]="!steam64Input && !dayzId"
-                            (click)="ban()"
-                        >BAN</button>
-                    </div>
-                    <div class="col">
-                        <button class="btn btn-danger"
-                            [disabled]="!steam64Input && !dayzId"
-                            (click)="unban()"
-                        >UNBAN</button>
-                    </div>
 
-                    <div class="col">
-                        <button class="btn btn-primary"
-                            (click)="reloadRconBans()"
-                            title="Relaod RCON Bans"
-                        >RELOAD RCON BANS</button>
+            <div class="action-panel" title="Either a valid Steam64 or DayZ ID must be entered to execute actions.">
+                <div class="panel-heading">
+                    <div>
+                        <span class="panel-index">02</span>
+                        <h4>Selected player</h4>
+                    </div>
+                    <span class="target-state" [class.target-ready]="steam64Input.length === 17 || dayzId.length === 44">
+                        {{ steam64Input.length === 17 || dayzId.length === 44 ? 'TARGET READY' : 'NO TARGET' }}
+                    </span>
+                </div>
+
+                <div class="selected-player" *ngIf="playerService.selected$ | async as selected; else noSelectedPlayer">
+                    <strong>{{ selected.name || selected.ingamename || 'Known player' }}</strong>
+                    <code>{{ selected.steamid || selected.dayzid || selected.beguid }}</code>
+                    <div class="status-row" aria-label="Player status">
+                        <span class="status-badge" [class.status-alert]="selected.banned">
+                            {{ selected.banned ? 'BANNED' : 'NOT BANNED' }}
+                        </span>
+                        <span class="status-badge" [class.status-positive]="selected.whitelisted">WHITELIST</span>
+                        <span class="status-badge" [class.status-positive]="selected.prio">PRIORITY</span>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col">
-                        <button class="btn btn-primary"
-                            [disabled]="!steam64Input && !dayzId"
-                            (click)="whitelist()"
-                        >WHITELIST</button>
+                <ng-template #noSelectedPlayer>
+                    <div class="selected-player selected-player-empty">
+                        Select a row below or enter an ID to establish an action target.
                     </div>
-                    <div class="col">
-                        <button class="btn btn-primary"
-                            [disabled]="!steam64Input && !dayzId"
-                            (click)="unwhitelist()"
-                        >UNWHITELIST</button>
+                </ng-template>
+
+                <div class="action-groups">
+                    <div class="action-group action-group-danger" aria-label="Ban controls">
+                        <button class="btn btn-danger" type="button"
+                            [disabled]="steam64Input.length !== 17 && dayzId.length !== 44" (click)="ban()">Ban</button>
+                        <button class="btn btn-outline-danger" type="button"
+                            [disabled]="steam64Input.length !== 17 && dayzId.length !== 44" (click)="unban()">Unban</button>
                     </div>
-                    <div class="col"></div>
-                </div>
-                <div class="row">
-                    <div class="col">
-                        <button class="btn btn-primary"
-                            [disabled]="!steam64Input && !dayzId"
-                            (click)="prio()"
-                        >PRIO</button>
+                    <div class="action-group" aria-label="Access controls">
+                        <button class="btn btn-primary" type="button"
+                            [disabled]="steam64Input.length !== 17 && dayzId.length !== 44" (click)="whitelist()">Whitelist</button>
+                        <button class="btn btn-outline-light" type="button"
+                            [disabled]="steam64Input.length !== 17 && dayzId.length !== 44" (click)="unwhitelist()">Remove whitelist</button>
                     </div>
-                    <div class="col">
-                        <button class="btn btn-primary"
-                            [disabled]="!steam64Input && !dayzId"
-                            (click)="unprio()"
-                        >UNPRIO</button>
+                    <div class="action-group" aria-label="Priority controls">
+                        <button class="btn btn-primary" type="button"
+                            [disabled]="steam64Input.length !== 17 && dayzId.length !== 44" (click)="prio()">Priority</button>
+                        <button class="btn btn-outline-light" type="button"
+                            [disabled]="steam64Input.length !== 17 && dayzId.length !== 44" (click)="unprio()">Remove priority</button>
                     </div>
-                    <div class="col"></div>
+                    <button class="btn btn-console" type="button" (click)="reloadRconBans()" title="Reload RCON bans">
+                        Reload RCON bans
+                    </button>
                 </div>
             </div>
         </div>
-    </div>
-    <ul class="nav-tabs" [(activeId)]="activeTab" ngbNav #nav="ngbNav">
-        <li [ngbNavItem]="1">
-            <a ngbNavLink>Current Players</a>
-            <ng-template ngbNavContent>
-                <sb-card background="card-no-top">
-                    <!-- <div class="card-header">
-                        <fa-icon class="mr-1" [icon]='["fas", "table"]'></fa-icon>Current Players
-                    </div> -->
-                    <div class="card-body">
-                        <sb-player-table
-                            [players$]="playerService.players$"
-                            [total$]="playerService.total$"
-                        ></sb-player-table>
-                    </div>
-                </sb-card>
-            </ng-template>
-        </li>
-        <li [ngbNavItem]="2">
-            <a ngbNavLink>All Players</a>
-            <ng-template ngbNavContent>
-                <sb-card background="card-no-top">
-                    <!-- <div class="card-header">
-                        <fa-icon class="mr-1" [icon]='["fas", "table"]'></fa-icon>All Players
-                    </div> -->
-                    <div class="card-body">
-                        <sb-player-table
-                            [players$]="playerService.allPlayers$"
-                            [total$]="playerService.allTotal$"
-                        ></sb-player-table>
-                    </div>
-                </sb-card>
-            </ng-template>
-        </li>
-        <li [ngbNavItem]="3">
-            <a ngbNavLink>Bans</a>
-            <ng-template ngbNavContent>
-                <sb-card background="card-no-top">
-                    <div class="card-body">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th scope="col"><span>ID</span></th>
-                                </tr>
-                            </thead>
+    </section>
+
+    <section class="registry-console" aria-label="Player registries">
+        <ul class="nav nav-tabs console-tabs" [(activeId)]="activeTab" ngbNav #nav="ngbNav">
+            <li [ngbNavItem]="1">
+                <a ngbNavLink>Current players</a>
+                <ng-template ngbNavContent>
+                    <sb-player-table [players$]="playerService.players$" [total$]="playerService.total$"></sb-player-table>
+                </ng-template>
+            </li>
+            <li [ngbNavItem]="2">
+                <a ngbNavLink>All players</a>
+                <ng-template ngbNavContent>
+                    <sb-player-table [players$]="playerService.allPlayers$" [total$]="playerService.allTotal$"></sb-player-table>
+                </ng-template>
+            </li>
+            <li [ngbNavItem]="3">
+                <a ngbNavLink>Bans <span class="tab-count">{{ playerService.bans.size }}</span></a>
+                <ng-template ngbNavContent>
+                    <div class="registry-table" role="region" aria-label="Ban list" tabindex="0">
+                        <table class="table console-table">
+                            <thead><tr><th scope="col">DayZ ID</th><th scope="col">Status</th></tr></thead>
                             <tbody>
                                 <tr *ngFor="let item of playerService.bans"
-                                    [ngStyle]="{ 'background': (playerService.selected$ | async)?.dayzid === item ? '#00009999' : undefined }"
-                                    (click)="playerService.selectPlayer(item)"
-                                >
-                                    <th scope="row">{{ item }}</th>
+                                    [class.is-selected]="(playerService.selected$ | async)?.dayzid === item"
+                                    (click)="playerService.selectPlayer(item)" (keydown.enter)="playerService.selectPlayer(item)"
+                                    (keydown.space)="playerService.selectPlayer(item); $event.preventDefault()" tabindex="0">
+                                    <th scope="row"><code>{{ item }}</code></th>
+                                    <td><span class="status-badge status-alert">BANNED</span></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                </sb-card>
-            </ng-template>
-        </li>
-        <li [ngbNavItem]="4">
-            <a ngbNavLink>Whitelist</a>
-            <ng-template ngbNavContent>
-                <sb-card background="card-no-top">
-                    <div class="card-body">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th scope="col"><span>ID</span></th>
-                                </tr>
-                            </thead>
+                </ng-template>
+            </li>
+            <li [ngbNavItem]="4">
+                <a ngbNavLink>Whitelist <span class="tab-count">{{ playerService.whitelisted.size }}</span></a>
+                <ng-template ngbNavContent>
+                    <div class="registry-table" role="region" aria-label="Whitelist" tabindex="0">
+                        <table class="table console-table">
+                            <thead><tr><th scope="col">DayZ ID</th><th scope="col">Status</th></tr></thead>
                             <tbody>
                                 <tr *ngFor="let item of playerService.whitelisted"
-                                    [ngStyle]="{ 'background': (playerService.selected$ | async)?.dayzid === item ? '#00009999' : undefined }"
-                                    (click)="playerService.selectPlayer(item)"
-                                >
-                                    <th scope="row">{{ item }}</th>
+                                    [class.is-selected]="(playerService.selected$ | async)?.dayzid === item"
+                                    (click)="playerService.selectPlayer(item)" (keydown.enter)="playerService.selectPlayer(item)"
+                                    (keydown.space)="playerService.selectPlayer(item); $event.preventDefault()" tabindex="0">
+                                    <th scope="row"><code>{{ item }}</code></th>
+                                    <td><span class="status-badge status-positive">ALLOWED</span></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                </sb-card>
-            </ng-template>
-        </li>
-        <li [ngbNavItem]="5">
-            <a ngbNavLink>Priority</a>
-            <ng-template ngbNavContent>
-                <sb-card background="card-no-top">
-                    <div class="card-body">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th scope="col"><span>ID</span></th>
-                                </tr>
-                            </thead>
+                </ng-template>
+            </li>
+            <li [ngbNavItem]="5">
+                <a ngbNavLink>Priority <span class="tab-count">{{ playerService.priority.size }}</span></a>
+                <ng-template ngbNavContent>
+                    <div class="registry-table" role="region" aria-label="Priority list" tabindex="0">
+                        <table class="table console-table">
+                            <thead><tr><th scope="col">Steam64 ID</th><th scope="col">Status</th></tr></thead>
                             <tbody>
                                 <tr *ngFor="let item of playerService.priority"
-                                    [ngStyle]="{ 'background': (playerService.selected$ | async)?.steamid === item ? '#00009999' : undefined }"
-                                    (click)="playerService.selectPlayer(item)"
-                                >
-                                    <th scope="row">{{ item }}</th>
+                                    [class.is-selected]="(playerService.selected$ | async)?.steamid === item"
+                                    (click)="playerService.selectPlayer(item)" (keydown.enter)="playerService.selectPlayer(item)"
+                                    (keydown.space)="playerService.selectPlayer(item); $event.preventDefault()" tabindex="0">
+                                    <th scope="row"><code>{{ item }}</code></th>
+                                    <td><span class="status-badge status-positive">PRIORITY</span></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                </sb-card>
-            </ng-template>
-        </li>
-        <li [ngbNavItem]="6">
-            <a ngbNavLink>RCON Bans</a>
-            <ng-template ngbNavContent>
-                <sb-card background="card-no-top">
-                    <div class="card-body">
-                        <table class="table table-striped">
+                </ng-template>
+            </li>
+            <li [ngbNavItem]="6">
+                <a ngbNavLink>RCON bans <span class="tab-count">{{ playerService.rconBans.size }}</span></a>
+                <ng-template ngbNavContent>
+                    <div class="registry-table" role="region" aria-label="RCON bans" tabindex="0">
+                        <table class="table console-table">
                             <thead>
-                                <tr>
-                                    <th scope="col"><span>ID</span></th>
-                                    <th scope="col"><span>Ban</span></th>
-                                    <th scope="col"><span>Type</span></th>
-                                    <th scope="col"><span>Time</span></th>
-                                    <th scope="col"><span>Reason</span></th>
-                                </tr>
+                                <tr><th scope="col">ID</th><th scope="col">Ban</th><th scope="col">Type</th><th scope="col">Time</th><th scope="col">Reason</th></tr>
                             </thead>
                             <tbody>
                                 <tr *ngFor="let item of playerService.rconBans.values()"
-                                    [ngStyle]="{ 'background': (playerService.selected$ | async)?.beguid === item.ban ? '#00009999' : undefined }"
-                                    (click)="playerService.selectPlayer(item.ban)"
-                                >
+                                    [class.is-selected]="(playerService.selected$ | async)?.beguid === item.ban"
+                                    (click)="playerService.selectPlayer(item.ban)" (keydown.enter)="playerService.selectPlayer(item.ban)"
+                                    (keydown.space)="playerService.selectPlayer(item.ban); $event.preventDefault()" tabindex="0">
                                     <th scope="row">{{ item.id }}</th>
-                                    <th scope="row">{{ item.ban }}</th>
-                                    <th scope="row">{{ item.type }}</th>
-                                    <th scope="row">{{ item.time }}</th>
-                                    <th scope="row">{{ item.reason }}</th>
+                                    <td><code>{{ item.ban }}</code></td>
+                                    <td><span class="status-badge status-alert">{{ item.type }}</span></td>
+                                    <td>{{ item.time }}</td>
+                                    <td class="reason-cell">{{ item.reason }}</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                </sb-card>
-            </ng-template>
-        </li>
-    </ul>
-    <div class="mt-2" [ngbNavOutlet]="nav"></div>
+                </ng-template>
+            </li>
+        </ul>
+        <div class="registry-content" [ngbNavOutlet]="nav"></div>
+    </section>
 </sb-layout-dashboard>

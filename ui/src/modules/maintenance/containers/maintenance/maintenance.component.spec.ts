@@ -1,50 +1,69 @@
-import { Component, DebugElement, NO_ERRORS_SCHEMA } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-
+import { MaintenanceService } from '../../services/maintenance.service';
 import { MaintenanceComponent } from './maintenance.component';
 
-@Component({
-    template: `
-        <sb-tables [someInput]="someInput" (someFunction)="someFunction($event)"></sb-tables>
-    `,
-})
-class TestHostComponent {
-    // someInput = 1;
-    // someFunction(event: Event) {}
-}
-
-describe('TablesComponent', () => {
-    let fixture: ComponentFixture<TestHostComponent>;
-    let hostComponent: TestHostComponent;
-    let hostComponentDE: DebugElement;
-    let hostComponentNE: Element;
-
+describe('MaintenanceComponent', () => {
     let component: MaintenanceComponent;
-    let componentDE: DebugElement;
-    let componentNE: Element;
+    let maintenance: jasmine.SpyObj<MaintenanceService>;
 
     beforeEach(() => {
-        TestBed.configureTestingModule({
-            declarations: [TestHostComponent, MaintenanceComponent],
-            imports: [NoopAnimationsModule],
-            providers: [],
-            schemas: [NO_ERRORS_SCHEMA],
-        }).compileComponents();
-
-        fixture = TestBed.createComponent(TestHostComponent);
-        hostComponent = fixture.componentInstance;
-        hostComponentDE = fixture.debugElement;
-        hostComponentNE = hostComponentDE.nativeElement;
-
-        componentDE = hostComponentDE.children[0];
-        component = componentDE.componentInstance;
-        componentNE = componentDE.nativeElement;
-
-        fixture.detectChanges();
+        maintenance = jasmine.createSpyObj<MaintenanceService>('MaintenanceService', [
+            'updateServer',
+            'updateMods',
+            'createBackup',
+            'lockServer',
+            'unlockServer',
+            'lockRestarts',
+            'unlockRestarts',
+            'restartServer',
+            'kickAll',
+            'shutdown',
+            'sendMessage',
+        ]);
+        component = new MaintenanceComponent(maintenance);
     });
 
-    it('should display the component', () => {
-        expect(hostComponentNE.querySelector('sb-tables')).toEqual(jasmine.anything());
+    it('forwards update options as booleans', async () => {
+        maintenance.updateMods.and.returnValue(Promise.resolve(true));
+
+        await component.updateMods(true, false);
+
+        expect(maintenance.updateMods).toHaveBeenCalledWith(true, false);
+        expect(component.outcomeBadge).toEqual({
+            message: 'Successfully updated mods',
+            success: true,
+        });
+    });
+
+    it('exposes an in-flight state until an operation completes', async () => {
+        let resolveOperation!: (success: boolean) => void;
+        maintenance.createBackup.and.returnValue(new Promise<boolean>((resolve) => {
+            resolveOperation = resolve;
+        }));
+
+        const operation = component.createBackup();
+        expect(component.runningAction).toBe('create-backup');
+
+        resolveOperation(true);
+        await operation;
+        expect(component.runningAction).toBeUndefined();
+    });
+
+    it('does not force restart when confirmation is declined', async () => {
+        spyOn(window, 'confirm').and.returnValue(false);
+
+        await component.restartServer(true);
+
+        expect(maintenance.restartServer).not.toHaveBeenCalled();
+    });
+
+    it('confirms kick-all and shutdown commands', async () => {
+        const confirmation = spyOn(window, 'confirm').and.returnValue(false);
+
+        await component.kickAll();
+        await component.shutdown();
+
+        expect(confirmation).toHaveBeenCalledTimes(2);
+        expect(maintenance.kickAll).not.toHaveBeenCalled();
+        expect(maintenance.shutdown).not.toHaveBeenCalled();
     });
 });

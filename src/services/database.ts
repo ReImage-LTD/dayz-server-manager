@@ -79,6 +79,7 @@ export class Sqlite3Wrapper {
 // eslint-disable-next-line no-shadow
 export enum DatabaseTypes {
     METRICS,
+    OPERATIONS = 'operations',
 }
 
 interface DbConfig {

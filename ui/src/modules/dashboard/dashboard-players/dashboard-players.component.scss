@@ -1,1 +1,76 @@
-@import 'styles/variables.scss';
+:host {
+    display: block;
+}
+
+.section-heading,
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.section-heading {
+    margin-bottom: 0.85rem;
+}
+
+.section-heading p {
+    margin: 0 0 0.2rem;
+    color: var(--ops-accent, #5cc8ff);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.section-heading h2 {
+    margin: 0;
+    color: var(--ops-text-strong, #ffffff);
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.section-heading > span,
+.card-header small {
+    color: var(--ops-text-muted, #9cabb9);
+    font-size: 0.7rem;
+}
+
+sb-card {
+    display: block;
+    border: 1px solid var(--ops-border, #2c3948);
+    border-radius: var(--ops-radius, 0.25rem);
+    background: var(--ops-surface, #111923);
+}
+
+.card-header {
+    border-bottom: 1px solid var(--ops-border, #2c3948);
+    background: var(--ops-surface-raised, #172230);
+    color: var(--ops-text-strong, #ffffff);
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.card-header small {
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.card-body {
+    overflow-x: auto;
+    padding: 0;
+    background: var(--ops-surface, #111923);
+}
+
+.card-body:focus-visible {
+    outline: 2px solid var(--ops-focus, #8ad8ff);
+    outline-offset: -2px;
+}
+
+@media (max-width: 575.98px) {
+    .section-heading > span,
+    .card-header small {
+        display: none;
+    }
+}

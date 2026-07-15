@@ -1,1 +1,59 @@
-@import 'styles/variables.scss';
+:host {
+    display: block;
+    color: var(--ops-text, #e7edf3);
+}
+
+.operations-console {
+    padding-bottom: 2rem;
+}
+
+.console-intro {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--ops-border, #2c3948);
+    border-left: 3px solid var(--ops-accent, #5cc8ff);
+    border-radius: var(--ops-radius, 0.25rem);
+    background: var(--ops-surface, #111923);
+    box-shadow: var(--ops-shadow, 0 0.75rem 2rem rgba(0, 0, 0, 0.22));
+}
+
+.eyebrow {
+    margin: 0 0 0.3rem;
+    color: var(--ops-accent, #5cc8ff);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+h1 {
+    margin: 0;
+    color: var(--ops-text-strong, #ffffff);
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.console-intro__copy {
+    max-width: 30rem;
+    margin: 0;
+    color: var(--ops-text-muted, #9cabb9);
+    font-size: 0.875rem;
+    text-align: right;
+}
+
+@media (max-width: 767.98px) {
+    .console-intro {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 1rem;
+    }
+
+    .console-intro__copy {
+        text-align: left;
+    }
+}

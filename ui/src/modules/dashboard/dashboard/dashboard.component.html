@@ -1,6 +1,16 @@
 <sb-layout-dashboard>
     <sb-dashboard-head title="Dashboard" [hideBreadcrumbs]="false"></sb-dashboard-head>
-    <sb-dashboard-cards></sb-dashboard-cards>
-    <sb-dashboard-system></sb-dashboard-system>
-    <sb-dashboard-players></sb-dashboard-players>
+    <div class="operations-console">
+        <header class="console-intro">
+            <div>
+                <p class="eyebrow">Live operations</p>
+                <h1>Server overview</h1>
+            </div>
+            <p class="console-intro__copy">Current health, capacity, and player activity at a glance.</p>
+        </header>
+
+        <sb-dashboard-cards></sb-dashboard-cards>
+        <sb-dashboard-system></sb-dashboard-system>
+        <sb-dashboard-players></sb-dashboard-players>
+    </div>
 </sb-layout-dashboard>

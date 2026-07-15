@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import * as cron from 'cron-parser';
 import * as commentJson from 'comment-json';
-import { Config, EventTypeEnum } from './config';
+import { Config, EventTypeEnum, UserLevelEnum } from './config';
 
 export const parseConfigFileContent = (fileContent: string): any => {
 
@@ -97,6 +97,37 @@ export const validateConfig = (config: Config): string[] => {
                 errors.push(`Event (${event.name}) is missing a cron format`);
             }
 
+        }
+    }
+
+    const remoteNodeIds = new Set<string>();
+    const remoteNodeEndpoints = new Set<string>();
+    for (const remote of config.remoteNodes || []) {
+        if (!remote.id?.trim() || remote.id === config.instanceId || remoteNodeIds.has(remote.id)) {
+            errors.push(`Remote node has an empty, local, or duplicate id: ${remote.id || '<empty>'}`);
+        }
+        remoteNodeIds.add(remote.id);
+        if (!remote.sharedSecret) {
+            errors.push(`Remote node (${remote.id}) is missing a shared secret`);
+        }
+        if (!Array.isArray(remote.capabilities)) {
+            errors.push(`Remote node (${remote.id}) capabilities must be an array`);
+        }
+        try {
+            const endpoint = new URL(remote.endpoint);
+            if (!['http:', 'https:'].includes(endpoint.protocol) || endpoint.username || endpoint.password) {
+                errors.push(`Remote node (${remote.id}) has an unsafe endpoint`);
+            }
+            const normalizedEndpoint = endpoint.toString();
+            if (remoteNodeEndpoints.has(normalizedEndpoint)) {
+                errors.push(`Remote node (${remote.id}) has a duplicate endpoint`);
+            }
+            remoteNodeEndpoints.add(normalizedEndpoint);
+        } catch (_) {
+            errors.push(`Remote node (${remote.id}) has an invalid endpoint`);
+        }
+        if (!Object.keys(UserLevelEnum).includes(remote.authorizationLevel)) {
+            errors.push(`Remote node (${remote.id}) has an invalid authorization level`);
         }
     }
 

@@ -5,25 +5,29 @@
   flex-direction: column;
   height: 100%;
   flex-wrap: nowrap;
+  border-right: 1px solid var(--ops-border, #2c3832);
   .sb-sidenav-menu {
       flex-grow: 1;
     .nav {
       flex-direction: column;
       flex-wrap: nowrap;
       .sb-sidenav-menu-heading {
-        padding: 1.75rem 1rem 0.75rem;
-        font-size: 0.75rem;
+        padding: 1.5rem 1.25rem 0.55rem;
+        font-size: 0.67rem;
         font-weight: bold;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
       }
       .nav-link {
         display: flex;
         align-items: center;
-        padding-top: 0.75rem;
-        padding-bottom: 0.75rem;
+        margin: 0.1rem 0.65rem;
+        padding: 0.7rem 0.75rem;
+        border-radius: var(--ops-radius-sm, 0.3rem);
         position: relative;
         .sb-nav-link-icon {
           font-size: 0.9rem;
+          width: 1.5rem;
         }
         .sb-sidenav-collapse-arrow {
           display: inline-block;

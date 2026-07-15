@@ -1,13 +1,39 @@
-<div *ngIf="title" class="title-bar dark-theme">
-  &#9002; {{title}}
-  <div style="margin-left: auto; margin-right: auto;"></div>
-  <button class="btn btn-link btn-sm" (click)="toggleLock()" [title]="(lockToEnd ? 'Disable' : 'Enable') + ' Lock To End (auto scroll)'" >
-    <fa-icon [icon]='["fas", lockToEnd ? "lock" : "lock-open"]'></fa-icon>
-  </button>
+<header *ngIf="title" class="terminal-toolbar">
+    <div class="terminal-title">
+        <span class="terminal-mark" aria-hidden="true">&gt;_</span>
+        <div>
+            <h3>{{ title }}</h3>
+            <span>{{ messages.length }} {{ messages.length === 1 ? 'entry' : 'entries' }}</span>
+        </div>
+    </div>
+    <button class="follow-control" type="button"
+            (click)="toggleLock()"
+            [class.is-active]="lockToEnd"
+            [attr.aria-pressed]="lockToEnd"
+            [attr.aria-label]="lockToEnd ? 'Pause automatic log scrolling' : 'Follow newest log entries'">
+        <fa-icon aria-hidden="true" [icon]='["fas", lockToEnd ? "lock" : "lock-open"]'></fa-icon>
+        <span>{{ lockToEnd ? 'Following latest' : 'Follow paused' }}</span>
+    </button>
+</header>
+
+<div *ngIf="!messages.length" class="empty-stream" role="status">
+    <span aria-hidden="true">_</span>
+    Waiting for log entries
 </div>
-<cdk-virtual-scroll-viewport [itemSize]="itemSize" [minBufferPx]="10" [maxBufferPx]="10" class="dark-theme flex-grow"
-  style="overflow: scroll;" #scrollView>
-  <div *cdkVirtualFor="let log of messages; let i = index;" style="white-space: nowrap">
-    {{log.message}}
-  </div>
+
+<cdk-virtual-scroll-viewport
+    [itemSize]="itemSize"
+    [minBufferPx]="220"
+    [maxBufferPx]="440"
+    class="terminal-viewport"
+    #scrollView
+    role="log"
+    aria-live="polite"
+    aria-relevant="additions"
+    [attr.aria-label]="title + ' output'"
+    tabindex="0">
+    <div *cdkVirtualFor="let log of messages; let i = index" class="log-line">
+        <span class="line-number" aria-hidden="true">{{ i + 1 }}</span>
+        <span class="line-message">{{ log.message }}</span>
+    </div>
 </cdk-virtual-scroll-viewport>

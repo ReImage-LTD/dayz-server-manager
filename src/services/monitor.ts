@@ -90,6 +90,11 @@ export class Monitor extends IStatefulService {
         return this.serverStarter.killServer(force);
     }
 
+    public async startServer(): Promise<boolean> {
+        this.internalServerState = ServerState.STARTING;
+        return this.serverStarter.startServer(false);
+    }
+
     public async start(): Promise<void> {
         if (this.timers.getTimer('tick')) return; // already started
 
@@ -238,4 +243,3 @@ export class Monitor extends IStatefulService {
     }
 
 }
-

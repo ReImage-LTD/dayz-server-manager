@@ -4,6 +4,7 @@ import { Breadcrumb } from '../../models';
 import { NavigationService } from '../../services/navigation.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import { AppCommonService } from '../../../../modules/app-common/services/app-common.service';
+import { FleetContextService } from '../../../app-common/services/fleet-context.service';
 
 @Component({
     selector: 'sb-top-nav',
@@ -21,10 +22,20 @@ export class TopNavComponent implements OnInit, OnDestroy {
     public constructor(
         private navigationService: NavigationService,
         private auth: AuthService,
-        private appCommon: AppCommonService,
+        public appCommon: AppCommonService,
+        public fleet: FleetContextService,
     ) {}
 
     public ngOnInit(): void {
+        this.subscription.add(
+            this.fleet.activeNode$.subscribe((node) => {
+                if (node) {
+                    this.appCommon.fetchServerInfo().subscribe();
+                    this.appCommon.triggerUpdate();
+                }
+            }),
+        );
+        void this.fleet.load(this.auth.getAuthHeaders());
         this.refreshRate = String(this.appCommon.refreshRate);
         this.subscription.add(
             this.navigationService.routeData$().subscribe((routeData) => {

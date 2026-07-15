@@ -1,1 +1,16 @@
-@import 'styles/variables.scss';
+:host {
+    display: block;
+    --status-color: #e8aa43;
+}
+
+:host ::ng-deep #layoutError {
+    background: #07101a;
+}
+
+:host ::ng-deep #layoutError_footer {
+    border-top: 1px solid #223244;
+    background: #09121d;
+    color: #91a3b5;
+}
+
+@import '../../error-console';

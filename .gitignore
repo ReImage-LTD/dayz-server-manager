@@ -9,3 +9,4 @@ src/config/config.schema.json
 .nyc_output
 coverage
 *.log
+.playwright-mcp

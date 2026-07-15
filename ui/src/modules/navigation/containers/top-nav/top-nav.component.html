@@ -1,19 +1,23 @@
-<nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-    <button class="btn btn-link btn-sm order-1 order-lg-0" id="sidebarToggle" data-cy="topNavToggleSideNav" (click)="toggleSideNav()">
+<nav class="sb-topnav navbar navbar-expand navbar-dark" aria-label="Application toolbar">
+    <button class="btn btn-link btn-sm order-1 order-lg-0 toolbar-button" id="sidebarToggle" data-cy="topNavToggleSideNav" (click)="toggleSideNav()" aria-label="Toggle primary navigation">
         <fa-icon [icon]='["fas", "bars"]'></fa-icon>
     </button>
-    <a class="navbar-brand" routerLink="/dashboard">Server Manager</a>
+    <a class="navbar-brand" routerLink="/dashboard"><span class="brand-mark">DZ</span><span class="brand-copy"><strong>Server Manager</strong><small>Operations console</small></span></a>
 
     <sb-breadcrumbs class="hide-top-nav"></sb-breadcrumbs>
 
-    <div style="margin-left: auto; margin-right: auto;"></div>
+    <div class="page-context hide-page-header">
+        <span class="context-kicker">Workspace</span>
+        <strong>{{title || 'Overview'}}</strong>
+    </div>
 
-    <h4 class="page-title hide-page-header">{{title}}</h4>
+    <div class="server-context hide-top-nav" *ngIf="appCommon.SERVER_INFO | async as info">
+        <span class="state-indicator"></span>
+        <span><strong>{{ info.name || 'DayZ server' }}</strong><small>{{ info.worldName || 'World unavailable' }}</small></span>
+    </div>
 
-    <div style="margin-left: auto; margin-right: auto;"></div>
-
-    <div class="row" style="flex-wrap: nowrap; align-items: center; margin-left: 0; margin-right: 0.25rem; min-width: max-content;">
-        <label for="tickSelect" style="color: white; margin-right: 5px; margin-bottom: 0; white-space: nowrap;">Refresh Rate: </label>
+    <div class="refresh-control">
+        <label for="tickSelect">Refresh</label>
         <select id="tickSelect" class="form-control form-control-sm" aria-label="Fetch Delay"
             [(ngModel)]="refreshRate"
             (ngModelChange)="onRefreshRateChange($event)"
@@ -24,16 +28,17 @@
             <option selected value="30">30 sec</option>
             <option value="60">60 sec</option>
         </select>
-        <button class="btn btn-link order-1 order-lg-0"
+        <button class="btn btn-link order-1 order-lg-0 toolbar-button"
                 id="refresh"
                 (click)="refreshNow()"
                 title="Refresh Now"
+                aria-label="Refresh server data now"
         >
             <fa-icon [icon]='["fas", "sync"]'></fa-icon>
         </button>
     </div>
 
-    <button class="btn btn-link order-1 order-lg-0" id="logout" (click)="logout()">
+    <button class="btn btn-link order-1 order-lg-0 toolbar-button" id="logout" (click)="logout()" aria-label="Log out" title="Log out">
         <fa-icon [icon]='["fas", "sign-out-alt"]'></fa-icon>
     </button>
 </nav>

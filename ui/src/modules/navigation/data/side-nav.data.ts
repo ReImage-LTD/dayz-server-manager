@@ -2,26 +2,36 @@ import { SideNavItems, SideNavSection } from '../models';
 
 export const sideNavSections: SideNavSection[] = [
     {
-        text: 'CORE',
+        text: 'OVERVIEW',
         items: ['dashboard'],
     },
     {
-        text: 'DETAIL',
+        text: 'OPERATIONS',
         items: [
             'system',
             'players',
+            'maintenance',
+        ],
+    },
+    {
+        text: 'OBSERVABILITY',
+        items: [
             'audit',
             'logs',
-            'maintenance',
-            'settings',
+        ],
+    },
+    {
+        text: 'WORLD',
+        items: [
             'map',
             'maploot',
         ],
     },
     {
-        text: 'Files',
+        text: 'CONFIGURATION',
         items: [
             'types',
+            'settings',
         ],
     },
 ];
@@ -69,7 +79,7 @@ export const sideNavItems: SideNavItems = {
     },
     maploot: {
         icon: 'map',
-        text: 'MapLoot',
+        text: 'Loot map',
         link: '/dashboard/map/maploot',
     },
     types: {

@@ -1,1 +1,49 @@
 @import 'styles/variables.scss';
+
+.instance-block {
+    display: grid;
+    gap: 0.2rem;
+    margin: 1rem 0.75rem 0;
+    padding: 0.85rem;
+    background: var(--ops-surface, #151b18);
+    border: 1px solid var(--ops-border, #2c3832);
+    border-radius: var(--ops-radius, 0.5rem);
+}
+
+.instance-label {
+    color: var(--ops-text-subtle, #77847d);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.instance-state {
+    color: var(--ops-text-muted, #9daaa3);
+    font-size: 0.75rem;
+}
+
+.instance-select {
+    width: 100%;
+    padding: 0.35rem 0.45rem;
+    background: var(--ops-bg-elevated, #111614);
+    border: 1px solid var(--ops-border, #2c3832);
+    border-radius: var(--ops-radius-sm, 0.3rem);
+    color: var(--ops-text, #edf2ef);
+    font-size: 0.78rem;
+}
+
+.state-dot {
+    display: inline-block;
+    width: 0.45rem;
+    height: 0.45rem;
+    margin-right: 0.3rem;
+    background: var(--ops-success, #79b886);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(121, 184, 134, 0.1);
+}
+
+.state-dot.is-offline {
+    background: var(--ops-warning, #d6a757);
+    box-shadow: 0 0 0 3px rgba(214, 167, 87, 0.1);
+}

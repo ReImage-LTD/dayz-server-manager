@@ -14,8 +14,14 @@ import { IService } from '../types/service';
 import { LogLevel } from '../util/logger';
 import { makeTable } from '../util/table';
 import { constants as HTTP } from 'http2';
-import { ConfigFileHelper } from '../config/config-file-helper';
+import { ConfigFileHelper, ConfigRevisionConflictError } from '../config/config-file-helper';
 import { ServerDetector } from '../services/server-detector';
+import { OperationConflictError, Operations, SafeOperationError } from '../services/operations';
+import { NodeRegistry } from '../services/node-registry';
+import { TrackedOperation } from '../types/operations';
+import { FleetDispatcher } from '../services/fleet-dispatcher';
+import { FleetCommand } from '../types/fleet';
+import { UserLevel } from '../config/config';
 
 /* istanbul ignore next */
 const parseBoolean = (val: any): boolean => true === val || 'true' === val;
@@ -42,6 +48,9 @@ export class Interface extends IService {
         private backup: Backups,
         private missionFiles: MissionFiles,
         private configFileHelper: ConfigFileHelper,
+        private operations: Operations,
+        private nodeRegistry: NodeRegistry,
+        private fleetDispatcher: FleetDispatcher,
     ) {
         super(loggerFactory.createLogger('Manager'));
         this.setupCommandMap();
@@ -256,18 +265,37 @@ export class Interface extends IService {
                 method: 'get',
                 level: 'admin',
                 disableDiscord: true,
-                action: () => this.configFileHelper.getConfigFileContent(this.configFileHelper.getConfigFilePath()),
+                action: () => this.configFileHelper.getRedactedConfig(),
             })],
-            ['updateconfig', RequestTemplate.build({
+            ['configdocument', RequestTemplate.build({
+                method: 'get',
+                level: 'admin',
+                disableDiscord: true,
+                action: () => this.configFileHelper.getRevisionedConfig(),
+            })],
+            ['validateconfig', RequestTemplate.build({
                 method: 'post',
                 level: 'admin',
                 disableDiscord: true,
                 params: [{ name: 'config' }],
                 action: (req, params) => {
+                    const errors = this.configFileHelper.validateConfigContent(params.config);
+                    return { valid: errors.length === 0, errors };
+                },
+            })],
+            ['updateconfig', RequestTemplate.build({
+                method: 'post',
+                level: 'admin',
+                disableDiscord: true,
+                params: [{ name: 'config' }, { name: 'revision', optional: true }],
+                action: (req, params) => {
                     try {
-                        this.configFileHelper.writeConfig(params.config);
+                        this.configFileHelper.writeConfig(params.config, params.revision);
                         return true;
                     } catch (e) {
+                        if (e instanceof ConfigRevisionConflictError) {
+                            throw new Response(HTTP.HTTP_STATUS_CONFLICT, e.message);
+                        }
                         throw new Response(HTTP.HTTP_STATUS_BAD_REQUEST, e);
                     }
                 },
@@ -295,12 +323,93 @@ export class Interface extends IService {
                 method: 'post',
                 level: 'manage',
                 noResponse: true,
-                action: () => this.backup.createBackup(),
+                action: () => this.createTrackedOperation(
+                    'backup.create',
+                    'missions',
+                    async () => {
+                        if (!await this.backup.createBackup()) {
+                            throw new SafeOperationError('MISSIONS_NOT_FOUND', 'Mission directory does not exist');
+                        }
+                    },
+                ),
             })],
             ['getbackups', RequestTemplate.build({
                 method: 'get',
                 level: 'manage',
                 action: () => this.backup.getBackups(),
+            })],
+            ['createbackup', RequestTemplate.build({
+                method: 'post',
+                level: 'manage',
+                disableDiscord: true,
+                action: () => this.createTrackedOperation(
+                    'backup.create',
+                    'missions',
+                    async () => {
+                        const created = await this.backup.createBackup();
+                        if (!created) {
+                            throw new SafeOperationError('MISSIONS_NOT_FOUND', 'Mission directory does not exist');
+                        }
+                    },
+                ),
+            })],
+            ['restorebackup', RequestTemplate.build({
+                method: 'post',
+                level: 'manage',
+                disableDiscord: true,
+                params: [
+                    { name: 'id' },
+                    { name: 'createBackup', optional: true, parse: parseBoolean },
+                    { name: 'restart', optional: true, parse: parseBoolean },
+                ],
+                action: (req, params) => this.createTrackedOperation(
+                    'backup.restore',
+                    'missions',
+                    () => this.restoreBackup(
+                        params.id,
+                        parseBoolean(params.createBackup),
+                        parseBoolean(params.restart),
+                    ),
+                ),
+            })],
+            ['operations', RequestTemplate.build({
+                method: 'get',
+                level: 'manage',
+                disableDiscord: true,
+                params: [{ name: 'limit', optional: true, location: 'query', parse: parseNumber }],
+                action: (req, params) => this.operations.listOperations(parseNumber(params.limit)),
+            })],
+            ['operation', RequestTemplate.build({
+                method: 'get',
+                level: 'manage',
+                disableDiscord: true,
+                params: [{ name: 'id', location: 'query' }],
+                action: (req, params) => this.operations.getOperation(params.id),
+            })],
+            ['nodes', RequestTemplate.build({
+                method: 'get',
+                level: 'view',
+                disableDiscord: true,
+                action: () => this.nodeRegistry.list(),
+            })],
+            ['fleetdispatch', RequestTemplate.build({
+                method: 'post',
+                level: 'view',
+                disableDiscord: true,
+                params: [
+                    { name: 'nodeId' },
+                    { name: 'resource' },
+                    { name: 'body', optional: true },
+                    { name: 'query', optional: true },
+                ],
+                action: (req, params) => this.dispatchFleetCommand(req, params),
+            })],
+            ['fleethealth', RequestTemplate.build({
+                method: 'get',
+                level: 'view',
+                disableDiscord: true,
+                disableRest: true,
+                action: () => ({ healthy: true, nodeId: String(this.manager.config.instanceId) }),
             })],
             ['writemissionfile', RequestTemplate.build({
                 method: 'post',
@@ -383,6 +492,12 @@ export class Interface extends IService {
         if (error instanceof Response) {
             return error;
         }
+        if (error instanceof OperationConflictError) {
+            return new Response(HTTP.HTTP_STATUS_CONFLICT, {
+                message: error.message,
+                operation: error.operation,
+            });
+        }
         return new Response(
             HTTP.HTTP_STATUS_INTERNAL_SERVER_ERROR,
             errorMsg,
@@ -437,15 +552,145 @@ export class Interface extends IService {
         return this.rcon.getBans();
     };
 
+    private createTrackedOperation(type: string, resource: string, action: () => Promise<void>): TrackedOperation {
+        const operation = this.operations.createOperation(type, resource);
+        void this.runTrackedOperation(operation.id, action);
+        return operation;
+    }
+
+    private async runTrackedOperation(id: string, action: () => Promise<void>): Promise<void> {
+        this.operations.startOperation(id);
+        try {
+            await action();
+            this.operations.succeedOperation(id);
+        } catch (error) {
+            this.operations.failOperation(id, error);
+        }
+    }
+
+    private async restoreBackup(id: string, createBackup: boolean, restart: boolean): Promise<void> {
+        if (!restart && await this.serverDetector.isServerRunning()) {
+            throw new SafeOperationError('SERVER_RUNNING', 'Server must be stopped before restoring a backup');
+        }
+
+        const previousRestartLock = this.monitor.restartLock;
+        this.monitor.restartLock = true;
+        try {
+            if (restart) {
+                if (!await this.monitor.killServer(true) || await this.serverDetector.isServerRunning()) {
+                    throw new SafeOperationError('SERVER_STOP_FAILED', 'Could not stop server for backup restore');
+                }
+            }
+            if (createBackup && !await this.backup.createBackup()) {
+                throw new SafeOperationError('MISSIONS_NOT_FOUND', 'Mission directory does not exist');
+            }
+            await this.backup.restoreBackup(id);
+            if (restart && !await this.monitor.startServer()) {
+                throw new SafeOperationError('SERVER_START_FAILED', 'Backup restored but the server could not be restarted');
+            }
+        } finally {
+            this.monitor.restartLock = previousRestartLock;
+        }
+    }
+
+    private redactAuditRequest(req: Request): Request {
+        const auditRequest = Object.assign(new Request(), req);
+        if (!req.body) {
+            return auditRequest;
+        }
+        if (['updateconfig', 'validateconfig', 'writemissionfile', 'writeprofilefile'].includes(req.resource)) {
+            auditRequest.body = '[REDACTED]';
+            return auditRequest;
+        }
+        auditRequest.body = this.redactAuditValue(req.body);
+        if (req.resource === 'fleetdispatch'
+            && ['updateconfig', 'validateconfig', 'writemissionfile', 'writeprofilefile'].includes(auditRequest.body.resource)) {
+            auditRequest.body.body = '[REDACTED]';
+        }
+        return auditRequest;
+    }
+
+    private redactAuditValue(value: any): any {
+        if (!value || typeof value !== 'object') {
+            return value;
+        }
+        if (Array.isArray(value)) {
+            return value.map((entry) => this.redactAuditValue(entry));
+        }
+        return Object.keys(value).reduce((redacted: Record<string, any>, key) => {
+            redacted[key] = /(password|secret|token|api.?key)/i.test(key)
+                ? '[REDACTED]'
+                : this.redactAuditValue(value[key]);
+            return redacted;
+        }, {} as Record<string, any>);
+    }
+
+    private hasLevel(actual: UserLevel, required: UserLevel): boolean {
+        const levels: UserLevel[] = ['admin', 'manage', 'moderate', 'view'];
+        return levels.includes(actual) && levels.indexOf(actual) <= levels.indexOf(required);
+    }
+
+    private async dispatchFleetCommand(req: Request, params: Record<string, any>): Promise<any> {
+        if (params.resource === 'fleetdispatch') {
+            throw new Response(HTTP.HTTP_STATUS_BAD_REQUEST, 'Recursive fleet dispatch is forbidden');
+        }
+        const target = this.commandMap.get(params.resource);
+        if (!target || target.disableRest || !req.user || !this.manager.isUserOfLevel(req.user, target.level)) {
+            throw new Response(HTTP.HTTP_STATUS_UNAUTHORIZED, 'You are not allowed to dispatch that command');
+        }
+        const authorizationLevel = this.manager.getUserLevel(req.user);
+        const command: FleetCommand = {
+            resource: params.resource,
+            method: target.method,
+            body: params.body,
+            query: params.query,
+            requiredCapability: params.resource,
+            authorizationLevel,
+            requestedBy: req.user,
+        };
+        const response = await this.fleetDispatcher.dispatch<Response>(
+            params.nodeId,
+            command,
+            (localCommand) => this.executeFleetCommand(localCommand, String(this.manager.config.instanceId)),
+        );
+        if (response.status >= HTTP.HTTP_STATUS_BAD_REQUEST) {
+            throw response;
+        }
+        return response.body;
+    }
+
+    public async executeFleetCommand(command: FleetCommand, sourceNodeId: string): Promise<Response> {
+        if (command.resource === 'fleetdispatch') {
+            return new Response(HTTP.HTTP_STATUS_BAD_REQUEST, 'Recursive fleet dispatch is forbidden');
+        }
+        const target = this.commandMap.get(command.resource);
+        if (!target
+            || command.method !== target.method
+            || (target.disableRest && command.resource !== 'fleethealth')
+            || !this.hasLevel(command.authorizationLevel, target.level)) {
+            return new Response(HTTP.HTTP_STATUS_UNAUTHORIZED, 'Fleet command is not authorized');
+        }
+
+        const request = new Request();
+        request.resource = command.resource;
+        request.body = command.body;
+        request.query = command.query;
+        request.fleet = {
+            authenticated: true,
+            sourceNodeId,
+            authorizationLevel: command.authorizationLevel,
+            requestedBy: command.requestedBy,
+        };
+        return this.execute(request);
+    }
+
     // apply RBAC and audit
     private async actionRbacCheck(req: Request, x: RequestTemplate): Promise<Response | null> {
         if (x.level) {
+            const fleetAuthorized = req.fleet?.authenticated
+                && this.hasLevel(req.fleet.authorizationLevel, x.level);
             const user = this.manager.config?.admins?.find((admin) => admin.userId === req.user);
-            if (
-                !user
-                || !req.user
-                || !this.manager.isUserOfLevel(req.user, x.level)
-            ) {
+            if (!fleetAuthorized && (!user || !req.user || !this.manager.isUserOfLevel(req.user, x.level))) {
                 return new Response(
                     HTTP.HTTP_STATUS_UNAUTHORIZED,
                     'You are not allowed to do that',
@@ -453,19 +698,22 @@ export class Interface extends IService {
             }
 
             if (req.resource && x.method !== 'get') {
+                const auditUser = req.fleet
+                    ? `fleet:${req.fleet.sourceNodeId}:${req.fleet.requestedBy}`
+                    : user.userId;
                 void this.metrics.pushMetricValue(
                     'AUDIT',
                     {
                         timestamp: new Date().valueOf(),
-                        user: user.userId,
-                        value: req,
+                        user: auditUser,
+                        value: this.redactAuditRequest(req),
                     },
                 );
 
                 if (req.resource !== 'global') {
                     this.log.log(
                         LogLevel.IMPORTANT,
-                        `User '${req.user}' executed: ${req.resource}`,
+                        `User '${auditUser}' executed: ${req.resource}`,
                     );
                 }
             }

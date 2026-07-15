@@ -1,1 +1,28 @@
 @import 'styles/variables.scss';
+
+:host {
+    display: block;
+    min-height: 100vh;
+}
+
+.ops-main,
+.ops-content {
+    min-height: 100%;
+}
+
+.skip-link {
+    position: fixed;
+    left: 1rem;
+    top: -4rem;
+    z-index: 1200;
+    padding: 0.65rem 0.9rem;
+    background: var(--ops-accent);
+    border-radius: var(--ops-radius-sm);
+    color: #101510;
+    font-weight: 700;
+    transition: top 0.15s ease;
+}
+
+.skip-link:focus {
+    top: 0.75rem;
+}

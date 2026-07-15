@@ -1,10 +1,15 @@
 import { ChangeDetectorRef, Component, DebugElement, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { NavigationService } from '@modules/navigation/services';
-import { NavigationServiceStub } from '@testing/stubs';
+import { BehaviorSubject } from 'rxjs';
 
+import { NavigationService } from '../../services/navigation.service';
 import { LayoutDashboardComponent } from './layout-dashboard.component';
+
+const sideNavVisible = new BehaviorSubject(true);
+const navigationServiceStub = {
+    sideNavVisible$: () => sideNavVisible.asObservable(),
+};
 
 @Component({
     template: `
@@ -32,11 +37,12 @@ describe('LayoutDashboardComponent', () => {
     let navigationService: NavigationService;
 
     beforeEach(() => {
+        sideNavVisible.next(true);
         TestBed.configureTestingModule({
             declarations: [TestHostComponent, LayoutDashboardComponent],
             imports: [NoopAnimationsModule],
             providers: [
-                { provide: NavigationService, useValue: NavigationServiceStub },
+                { provide: NavigationService, useValue: navigationServiceStub },
                 ChangeDetectorRef,
             ],
             schemas: [NO_ERRORS_SCHEMA],
@@ -58,5 +64,11 @@ describe('LayoutDashboardComponent', () => {
 
     it('should display the component', () => {
         expect(hostComponentNE.querySelector('sb-layout-dashboard')).toEqual(jasmine.anything());
+    });
+
+    it('reflects side navigation visibility', () => {
+        sideNavVisible.next(false);
+
+        expect(component.sideNavHidden).toBe(true);
     });
 });

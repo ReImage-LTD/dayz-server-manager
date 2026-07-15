@@ -65,11 +65,13 @@ export class PlayersComponent implements OnInit {
 
     public async ban(): Promise<void> {
         if (this.steam64Input?.length !== 17 && this.dayzId?.length !== 44) return;
+        if (typeof window !== 'undefined' && !window.confirm(`Ban player ${this.steam64Input || this.dayzId}?`)) return;
         await this.playerService.ban(this.steam64Input || this.dayzId).toPromise();
         await this.playerService.loadLists();
     }
     public async unban(): Promise<void> {
         if (this.steam64Input?.length !== 17 && this.dayzId?.length !== 44) return;
+        if (typeof window !== 'undefined' && !window.confirm(`Unban player ${this.steam64Input || this.dayzId}?`)) return;
         await this.playerService.unban(this.steam64Input || this.dayzId).toPromise();
         await this.playerService.loadLists();
     }

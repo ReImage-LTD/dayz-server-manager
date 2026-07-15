@@ -1,66 +1,79 @@
-<sb-layout-auth>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-5">
-                <div class="card shadow-lg border-0 rounded-lg mt-5">
-                    <div class="card-header">
-                        <h3 class="text-center font-weight-light my-4">Login</h3>
-                    </div>
-                    <div class="card-body">
-                        <form>
-                            <div class="form-group">
-                                <label class="small mb-1" for="inputUser">Username</label>
-                                <input class="form-control py-4"
-                                       id="inputUser"
-                                       placeholder="Enter username"
-                                       [(ngModel)]="username"
-                                       [ngModelOptions]="{standalone: true}"
-                                />
-                            </div>
-                            <div class="form-group">
-                                <label class="small mb-1" for="inputPassword">Password</label>
-                                <input class="form-control py-4"
-                                       id="inputPassword"
-                                       type="password"
-                                       placeholder="Enter password"
-                                       [(ngModel)]="password"
-                                       [ngModelOptions]="{standalone: true}"
-                                />
-                            </div>
-                            <div class="form-group">
-                                <div class="custom-control custom-checkbox">
-                                    <input class="custom-control-input"
-                                           id="rememberPasswordCheck"
-                                           type="checkbox"
-                                           [(ngModel)]="remember"
-                                           [ngModelOptions]="{standalone: true}"
-                                    />
-                                    <label class="custom-control-label" for="rememberPasswordCheck">
-                                        Remember password
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="form-group" *ngIf="failure">
-                                <ngb-alert [dismissible]="false" [type]="'danger'">
-                                    <strong>Error!</strong> {{ failure }}
-                                </ngb-alert>
-                            </div>
-                            <div class="form-group d-flex align-items-center justify-content-between mt-4 mb-0">
-                                <!-- <a class="small" routerLink="/auth/forgot-password">Forgot Password?</a> -->
-                                <button class="btn btn-primary"
-                                        (click)="login()"
-                                        [disabled]="!username || !password"
-                                >
-                                    Login
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                    <!-- <div class="card-footer text-center">
-                        <div class="small"><a routerLink="/auth/register">Need an account? Sign up!</a></div>
-                    </div> -->
+<sb-layout-auth class="auth-layout">
+    <div class="auth-console">
+        <section class="auth-panel" aria-labelledby="login-heading">
+            <header class="panel-header">
+                <div>
+                    <p class="eyebrow">DayZ server manager</p>
+                    <h1 id="login-heading">Operations access</h1>
+                    <p class="panel-copy">Authenticate to continue to the management console.</p>
                 </div>
-            </div>
-        </div>
+                <span class="system-state"><span aria-hidden="true"></span>Secure session</span>
+            </header>
+
+            <form class="login-form" #loginForm="ngForm" (ngSubmit)="login()" novalidate>
+                <div class="form-group">
+                    <label for="inputUser">Username</label>
+                    <input class="form-control"
+                           id="inputUser"
+                           name="username"
+                           type="text"
+                           placeholder="Operator username"
+                           autocomplete="username"
+                           autocapitalize="none"
+                           spellcheck="false"
+                           required
+                           [disabled]="isLoading"
+                           [(ngModel)]="username"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="inputPassword">Password</label>
+                    <input class="form-control"
+                           id="inputPassword"
+                           name="password"
+                           type="password"
+                           placeholder="Account password"
+                           autocomplete="current-password"
+                           required
+                           [disabled]="isLoading"
+                           [(ngModel)]="password"
+                    />
+                </div>
+
+                <div class="form-group remember-row">
+                    <div class="custom-control custom-checkbox">
+                        <input class="custom-control-input"
+                               id="rememberPasswordCheck"
+                               name="remember"
+                               type="checkbox"
+                               [disabled]="isLoading"
+                               [(ngModel)]="remember"
+                        />
+                        <label class="custom-control-label" for="rememberPasswordCheck">Remember this session</label>
+                    </div>
+                    <span>Use only on a trusted device</span>
+                </div>
+
+                <div class="login-error" *ngIf="failure" role="alert" aria-live="assertive">
+                    <strong>Access denied</strong>
+                    <span>{{ failure }}</span>
+                </div>
+
+                <button class="btn login-button"
+                        type="submit"
+                        [disabled]="loginForm.invalid || isLoading"
+                        [attr.aria-busy]="isLoading"
+                >
+                    <span class="spinner-border spinner-border-sm" *ngIf="isLoading" aria-hidden="true"></span>
+                    <span>{{ isLoading ? 'Authenticating...' : 'Enter console' }}</span>
+                </button>
+            </form>
+
+            <footer class="panel-footer">
+                <span>Authorized operators only</span>
+                <span class="protocol">TLS / BASIC AUTH</span>
+            </footer>
+        </section>
     </div>
 </sb-layout-auth>

@@ -1,75 +1,106 @@
 <sb-layout-dashboard>
-    <div class="h-100 d-flex flex-column">
-        <ngb-alert  *ngIf="outcomeBadge"
-                    [type]="outcomeBadge.success ? 'success' : 'danger'"
-                    (closed)="outcomeBadge = undefined"
-                    style="position: absolute;"
+    <div class="map-editor">
+        <ngb-alert *ngIf="outcomeBadge"
+                   class="map-alert"
+                   [type]="outcomeBadge.success ? 'success' : 'danger'"
+                   (closed)="outcomeBadge = undefined"
         >
             {{ outcomeBadge.message }}
         </ngb-alert>
-        <div class="d-flex flex-column flex-grow">
-            <div class="d-flex btn-group"
-                 style="margin-top: -1rem; margin-left: -1rem; margin-right: -1rem; margin-bottom: 0.5rem;"
-            >
-                <label style="margin-bottom: 0; margin-right: 0.5rem; align-self: center;">Search:</label>
-                <input class="form-control"
-                       style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
-                       (keyup)="$event.key === 'Enter' ? search(searchInput.value) : null"
-                       #searchInput
-                >
-                <button class="btn btn-primary"
-                        (click)="search(searchInput.value)"
-                >
-                    <fa-icon [icon]='["fas", "search"]'></fa-icon>
-                </button>
-                <button class="btn btn-danger"
-                        (click)="searchInput.value = ''; search(undefined)"
-                >
-                    <fa-icon [icon]='["fas", "trash"]'></fa-icon>
-                </button>
-            </div>
-            <div style="flex-grow: 1;"
-                *ngIf="options"
-                leaflet
-                (leafletMapReady)="onMapReady($event)"
-                (leafletCenterChange)="onCenterChange($event)"
-                (leafletDoubleClick)="onMapDoubleClick($event)"
-                [leafletOptions]="options"
+
+        <section class="map-workspace map-workspace-editor" aria-label="Loot map editor">
+            <div class="map-canvas"
+                 *ngIf="options"
+                 leaflet
+                 (leafletMapReady)="onMapReady($event)"
+                 (leafletCenterChange)="onCenterChange($event)"
+                 (leafletDoubleClick)="onMapDoubleClick($event)"
+                 [leafletOptions]="options"
             ></div>
-            <div style="position: absolute;left: 48%;background: #fff8;z-index: 900;padding: 7px;border-radius: 7px;bottom: 6%;">
-                {{ curCoordinatesX }} | {{ curCoordinatesY }}
+
+            <div class="map-toolbar" role="search" aria-label="Search map events">
+                <label class="map-search-label" for="loot-map-search">Search events</label>
+                <div class="map-search-controls">
+                    <input id="loot-map-search"
+                           class="form-control map-search-input"
+                           type="search"
+                           placeholder="Event name"
+                           autocomplete="off"
+                           (keyup)="$event.key === 'Enter' ? search(searchInput.value) : null"
+                           #searchInput
+                    >
+                    <button class="btn map-tool-button map-search-button"
+                            type="button"
+                            title="Search map events"
+                            aria-label="Search map events"
+                            (click)="search(searchInput.value)"
+                    >
+                        <fa-icon [icon]='["fas", "search"]'></fa-icon>
+                        <span class="map-button-label">Search</span>
+                    </button>
+                    <button class="btn map-tool-button map-clear-button"
+                            type="button"
+                            title="Clear event search"
+                            aria-label="Clear event search"
+                            (click)="searchInput.value = ''; search(undefined)"
+                    >
+                        <fa-icon [icon]='["fas", "trash"]'></fa-icon>
+                        <span class="map-button-label">Clear</span>
+                    </button>
+                </div>
             </div>
-        </div>
-        <div class="d-flex flex-row">
-            <div class="d-flex flex-row ml-1 mr-1" style="align-items: center;">
-                <label class="form-label" style="white-space: nowrap;">Create Backup</label>
-                <input type="checkbox" class="form-control form-control-sm mx-1"
+
+            <div class="map-status" role="status" aria-live="polite">
+                <span class="map-status-state">
+                    <span class="map-status-dot" [class.is-ready]="map && !submitting" aria-hidden="true"></span>
+                    {{ submitting ? 'Loading editor' : (map ? 'Editor ready' : 'Loading map') }}
+                </span>
+                <span class="map-status-divider" aria-hidden="true"></span>
+                <span class="map-coordinates" title="Current map coordinates">
+                    <span class="coordinate-label">X</span> {{ curCoordinatesX }}
+                    <span class="coordinate-label">Y</span> {{ curCoordinatesY }}
+                </span>
+            </div>
+        </section>
+
+        <div class="map-editor-actions" aria-label="Loot map save options">
+            <label class="map-option" for="map-create-backup">
+                <input id="map-create-backup"
+                       type="checkbox"
                        [(ngModel)]="withBackup"
                        [ngModelOptions]="{standalone: true}"
                        [disabled]="submitting"
                 >
-            </div>
-            <div class="d-flex flex-row ml-1 mr-1" style="align-items: center;">
-                <label class="form-label" style="white-space: nowrap;">Restart Server</label>
-                <input type="checkbox" class="form-control form-control-sm mx-1"
+                <span>Create backup</span>
+            </label>
+            <label class="map-option" for="map-restart-server">
+                <input id="map-restart-server"
+                       type="checkbox"
                        [(ngModel)]="withRestart"
                        [ngModelOptions]="{standalone: true}"
                        [disabled]="submitting"
                 >
+                <span>Restart server</span>
+            </label>
+            <div class="map-action-buttons">
+                <button type="submit"
+                        class="btn btn-success"
+                        title="Save map changes"
+                        (click)="onSubmit()"
+                        [disabled]="submitting"
+                >
+                    <fa-icon *ngIf="submitting" [icon]='["fas", "spinner"]' [classes]="['fa-spin']"></fa-icon>
+                    {{ submitting ? 'Saving...' : 'Submit changes' }}
+                </button>
+                <button type="button"
+                        class="btn btn-outline-light"
+                        title="Reload map data and discard unsaved changes"
+                        (click)="resetClicked()"
+                        [disabled]="submitting"
+                >
+                    Reset
+                </button>
             </div>
-            <button type="submit" class="btn btn-success ml-1 mr-1"
-                    (click)="onSubmit()"
-                    [disabled]="submitting"
-            >
-                <fa-icon *ngIf="submitting" [icon]='["fas", "spinner"]' [classes]="['fa-spin']"></fa-icon>
-                Submit
-            </button>
-            <button type="button" class="btn btn-primary ml-1 mr-1"
-                    (click)="resetClicked()"
-                    [disabled]="submitting"
-            >
-                Reset
-            </button>
         </div>
     </div>
 </sb-layout-dashboard>

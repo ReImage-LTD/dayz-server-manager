@@ -1,1 +1,9 @@
 @import 'styles/variables.scss';
+
+:host {
+    display: block;
+}
+
+.card {
+    overflow: hidden;
+}

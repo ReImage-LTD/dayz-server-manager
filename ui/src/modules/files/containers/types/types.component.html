@@ -1,48 +1,66 @@
 <sb-layout-dashboard class="types-component">
     <sb-dashboard-head title="Files" [hideBreadcrumbs]="false"></sb-dashboard-head>
-    <sb-card background="h-100 type-tabs">
-        <div class="card-header pb-0">
-
-            <div *ngIf="expanded" class="d-flex flex-row flex-grow w-100">
-                <div class="ml-auto">
-                    <ng-select [items]="typesColumnDefs"
-                        [(ngModel)]="selectedCols"
-                        [ngModelOptions]="{standalone: true}"
-                        placeholder="Columns"
-                        appendTo="body"
-                        bindLabel="colId"
-                        [searchable]="false"
-                        [multiple]="true"
-                        [closeOnSelect]="false"
-                        (change)="setVisibleCols($event)"
-                    >
-                        <ng-template ng-multi-label-tmp>
-                            <div class="ng-value">
-                                <span class="ng-value-label">{{selectedCols.length - 2}} selected...</span>
-                            </div>
-                        </ng-template>
-                    </ng-select>
+    <sb-card background="h-100 type-tabs types-workbench">
+        <div class="card-header workbench-header">
+            <div class="workbench-title-row">
+                <div>
+                    <span class="workbench-kicker">Economy configuration</span>
+                    <h2 class="workbench-title">Types workbench</h2>
+                </div>
+                <div class="workbench-state" role="status" aria-live="polite">
+                    <span class="state-dot" [class.is-busy]="loading || submitting" aria-hidden="true"></span>
+                    {{ loading ? 'Loading files' : (submitting ? 'Saving changes' : 'Ready to edit') }}
                 </div>
             </div>
 
-            <div style="display: flex; align-items: center; padding-bottom: 0; padding-top: 0.5rem;">
-                <div class="ml-3 mr-3" title="More options"
-                    style="cursor: pointer;"
-                    (click)="expanded = !expanded"
+            <div class="workbench-options" *ngIf="expanded" id="types-workbench-options">
+                <label class="control-label" for="types-column-picker">Visible columns</label>
+                <ng-select id="types-column-picker"
+                    class="column-picker"
+                    [items]="typesColumnDefs"
+                    [(ngModel)]="selectedCols"
+                    [ngModelOptions]="{standalone: true}"
+                    placeholder="Choose columns"
+                    appendTo="body"
+                    bindLabel="colId"
+                    [searchable]="false"
+                    [multiple]="true"
+                    [closeOnSelect]="false"
+                    (change)="setVisibleCols($event)"
+                    aria-label="Visible table columns"
                 >
-                    <fa-icon class="mr-1" [icon]='["fas", expanded ? "chevron-up" : "chevron-right"]'></fa-icon>
+                    <ng-template ng-multi-label-tmp>
+                        <div class="ng-value">
+                            <span class="ng-value-label">{{ selectedCols.length }} columns visible</span>
+                        </div>
+                    </ng-template>
+                </ng-select>
+            </div>
+
+            <div class="workbench-nav-row">
+                <div class="view-controls" aria-label="Table view controls">
+                    <button type="button"
+                            class="btn btn-sm view-control-button"
+                            title="Show or hide column options"
+                            [attr.aria-expanded]="expanded"
+                            aria-controls="types-workbench-options"
+                            (click)="expanded = !expanded"
+                    >
+                        <fa-icon [icon]='["fas", expanded ? "chevron-up" : "chevron-right"]'></fa-icon>
+                        Columns
+                    </button>
+                    <label class="width-lock" title="Lock or unlock table column widths">
+                        <input type="checkbox" [(ngModel)]="lockedWidth">
+                        <fa-icon [icon]='["fas", lockedWidth ? "lock" : "lock-open"]' aria-hidden="true"></fa-icon>
+                        <span>{{ lockedWidth ? 'Widths locked' : 'Widths flexible' }}</span>
+                    </label>
                 </div>
 
-                <div class="ml-3 mr-3" title="Un/Lock the width of the table columns">
-                    <fa-icon class="mr-1" [icon]='["fas", lockedWidth ? "lock" : "lock-open"]'></fa-icon>
-                    <input type="checkbox" [(ngModel)]="lockedWidth">
-                </div>
-
-                <ul class="nav-tabs mt-auto" [(activeId)]="activeTab" ngbNav #nav="ngbNav">
+                <ul class="nav-tabs workbench-tabs" [(activeId)]="activeTab" ngbNav #nav="ngbNav" aria-label="Types data views">
                     <li [ngbNavItem]="0">
-                        <a ngbNavLink>Types</a>
+                        <a ngbNavLink>Types <span class="tab-count">{{ combinedClasses.length }}</span></a>
                         <ng-template ngbNavContent>
-                            <div style="height: 100%; margin-bottom: 20px;">
+                            <div class="grid-panel">
                                 <ag-grid-angular
                                     *ngIf="typesColumnDefs?.length"
                                     [columnDefs]="typesColumnDefs"
@@ -59,147 +77,141 @@
                                     (rowDataUpdated)="filterChanged()"
                                     (firstDataRendered)="firstDataRendered()"
                                     (filterChanged)="filterChanged()"
-                                    style="width: 100%; height: 100%;"
-                                    class="ag-theme-alpine"
+                                    class="ag-theme-alpine editor-grid"
+                                    aria-label="Types configuration table"
                                     #dataGrid
                                 >
                                 </ag-grid-angular>
-
                             </div>
                         </ng-template>
                     </li>
 
                     <li [ngbNavItem]="1">
-                        <a ngbNavLink>Missing Types</a>
+                        <a ngbNavLink>Missing Types <span class="tab-count warning">{{ missingClasses.length }}</span></a>
                         <ng-template ngbNavContent>
-                            <div style="height: 100%">
-                                <div>
-                                    <span>Missing Types</span>
-                                    <ul>
-                                        <li *ngFor="let classname of missingClasses">
-                                            {{ classname }}
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
+                            <section class="findings-panel" aria-labelledby="missing-types-heading">
+                                <h3 id="missing-types-heading">Missing Types</h3>
+                                <p>{{ missingClasses.length }} known items are not present in the types files.</p>
+                                <ul class="findings-list">
+                                    <li *ngFor="let classname of missingClasses">{{ classname }}</li>
+                                </ul>
+                            </section>
                         </ng-template>
                     </li>
                     <li [ngbNavItem]="2" *ngIf="missingTraderItems && missingTraderItems.length">
-                        <a ngbNavLink>Missing Trader Items</a>
+                        <a ngbNavLink>Missing Trader <span class="tab-count warning">{{ missingTraderItems.length }}</span></a>
                         <ng-template ngbNavContent>
-                            <div style="height: 100%">
-                                <div >
-                                    <span></span>
-                                    <ul>
-                                        <li *ngFor="let classname of missingTraderItems">
-                                            {{ classname }}
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
+                            <section class="findings-panel" aria-labelledby="missing-trader-heading">
+                                <h3 id="missing-trader-heading">Missing Trader Items</h3>
+                                <ul class="findings-list">
+                                    <li *ngFor="let classname of missingTraderItems">{{ classname }}</li>
+                                </ul>
+                            </section>
                         </ng-template>
                     </li>
                     <li [ngbNavItem]="3" *ngIf="unknownTraderItems && unknownTraderItems.length">
-                        <a ngbNavLink>Unknown Trader Items</a>
+                        <a ngbNavLink>Unknown Trader <span class="tab-count warning">{{ unknownTraderItems.length }}</span></a>
                         <ng-template ngbNavContent>
-                            <div style="height: 100%">
-                                <div >
-                                    <span></span>
-                                    <ul>
-                                        <li *ngFor="let classname of unknownTraderItems">
-                                            {{ classname }}
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
+                            <section class="findings-panel" aria-labelledby="unknown-trader-heading">
+                                <h3 id="unknown-trader-heading">Unknown Trader Items</h3>
+                                <ul class="findings-list">
+                                    <li *ngFor="let classname of unknownTraderItems">{{ classname }}</li>
+                                </ul>
+                            </section>
                         </ng-template>
                     </li>
                     <li [ngbNavItem]="4" *ngIf="unknownClasses && unknownClasses.length">
-                        <a ngbNavLink>Unknown Items</a>
+                        <a ngbNavLink>Unknown Items <span class="tab-count warning">{{ unknownClasses.length }}</span></a>
                         <ng-template ngbNavContent>
-                            <div style="height: 100%">
-                                <div >
-                                    <span></span>
-                                    <ul>
-                                        <li *ngFor="let classname of unknownClasses">
-                                            {{ classname }}
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
+                            <section class="findings-panel" aria-labelledby="unknown-items-heading">
+                                <h3 id="unknown-items-heading">Unknown Items</h3>
+                                <ul class="findings-list">
+                                    <li *ngFor="let classname of unknownClasses">{{ classname }}</li>
+                                </ul>
+                            </section>
                         </ng-template>
                     </li>
                     <li [ngbNavItem]="5" *ngIf="traderOnlyItems && traderOnlyItems.length">
-                        <a ngbNavLink>Trader Only Items</a>
+                        <a ngbNavLink>Trader Only <span class="tab-count">{{ traderOnlyItems.length }}</span></a>
                         <ng-template ngbNavContent>
-                            <div style="height: 100%">
-                                <div >
-                                    <span></span>
-                                    <ul>
-                                        <li *ngFor="let classname of traderOnlyItems">
-                                            {{ classname }}
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
+                            <section class="findings-panel" aria-labelledby="trader-only-heading">
+                                <h3 id="trader-only-heading">Trader Only Items</h3>
+                                <ul class="findings-list">
+                                    <li *ngFor="let classname of traderOnlyItems">{{ classname }}</li>
+                                </ul>
+                            </section>
                         </ng-template>
                     </li>
                 </ul>
 
-                <div class="d-flex ml-auto" style="align-items: center;">
-                    <fa-icon class="mr-2" [icon]='["fas", "info"]'></fa-icon>
-                    <div style="font-weight: 400; font-size: 65%;">
-                        <div class="mr-2">Shown: {{ shownTypesCount }}</div>
-                        <div>Total Nominal: {{ totalNominal }}</div>
-                        <div>Estimated Nominal: {{ totalEstimatedNominal }}</div>
+                <div class="workbench-metrics" aria-label="Current table totals">
+                    <div class="metric">
+                        <span>Shown</span>
+                        <strong>{{ shownTypesCount }}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Nominal</span>
+                        <strong>{{ totalNominal }}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Estimated</span>
+                        <strong>{{ totalEstimatedNominal }}</strong>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="card-body" *ngIf="!loading">
-            <div class="d-flex flex-row justify-content-between">
-                <ngb-alert  *ngIf="outcomeBadge"
-                            [type]="outcomeBadge.success ? 'success' : 'danger'"
-                            (closed)="outcomeBadge = undefined"
+
+        <div class="card-body workbench-body" *ngIf="!loading">
+            <div class="workbench-alerts" aria-live="polite">
+                <ngb-alert *ngIf="outcomeBadge"
+                           [type]="outcomeBadge.success ? 'success' : 'danger'"
+                           (closed)="outcomeBadge = undefined"
                 >
                     {{ outcomeBadge.message }}
                 </ngb-alert>
-                <ngb-alert  *ngIf="validationErrors?.length"
-                            type="danger"
-                            (closed)="validationErrors = []"
+                <ngb-alert *ngIf="validationErrors?.length"
+                           type="danger"
+                           (closed)="validationErrors = []"
                 >
-                    <div>
-                        Errors:
-                        <ul style="max-height: 10vh; overflow-y: scroll;">
-                            <li *ngFor="let error of validationErrors">
-                                {{ error }}
-                            </li>
-                        </ul>
-                    </div>
+                    <strong>{{ validationErrors.length }} validation error{{ validationErrors.length === 1 ? '' : 's' }}</strong>
+                    <ul class="validation-list">
+                        <li *ngFor="let error of validationErrors">{{ error }}</li>
+                    </ul>
                 </ngb-alert>
             </div>
+
             <form (ngSubmit)="onSubmit()" #configForm="ngForm">
+                <div class="workbench-content" [ngbNavOutlet]="nav"></div>
 
-                <div [ngbNavOutlet]="nav"></div>
+                <div class="action-toolbar" aria-label="Types editor actions">
+                    <div class="action-group bulk-actions">
+                        <span class="action-group-label">Selection</span>
+                        <button type="button"
+                                class="btn btn-outline-light"
+                                (click)="duplicate()"
+                                title="Duplicate the selected entries"
+                        >
+                            Duplicate selected
+                        </button>
+                    </div>
 
-                <div class="d-flex flex-row" style="justify-content: space-between; flex-wrap: wrap; white-space: nowrap;">
-                    <div class="d-flex flex-row">
-                        <div>
-                            <button type="button" class="btn btn-success"
-                                    (click)="duplicate()"
-                                    title="Duplicate the selected entries"
+                    <div class="action-group operation-actions">
+                        <label class="action-group-label" for="bulk-operation-value">Bulk operation</label>
+                        <div class="operation-controls">
+                            <input id="bulk-operation-value"
+                                   class="form-control"
+                                   #changeInput
+                                   placeholder="Value"
+                                   aria-label="Bulk operation value"
                             >
-                                Duplicate
-                            </button>
-                        </div>
-                        <div class="d-flex flex-row btn-group ml-1 mr-1">
-                            <input #changeInput style="margin-right: -2px;">
-                            <select [(ngModel)]="selectedOpertaionCol"
+                            <select class="custom-select"
+                                    aria-label="Attribute to change"
+                                    [(ngModel)]="selectedOpertaionCol"
                                     (ngModelChange)="selectedOpertaion = undefined"
                                     [ngModelOptions]="{standalone: true}"
                             >
-                                <option [disabled]="true" [ngValue]="undefined" *ngIf="selectedOpertaionCol === undefined">Select...</option>
-                                <option [disabled]="true" [ngValue]="null" *ngIf="selectedOpertaionCol === null">Select...</option>
+                                <option [disabled]="true" [ngValue]="undefined" *ngIf="selectedOpertaionCol === undefined">Attribute...</option>
+                                <option [disabled]="true" [ngValue]="null" *ngIf="selectedOpertaionCol === null">Attribute...</option>
                                 <option *ngFor="let item of typesColumnDefs || []; let idx = index"
                                         [ngValue]="item"
                                         [selected]="idx === 0"
@@ -207,13 +219,14 @@
                                     {{ item.colId }}
                                 </option>
                             </select>
-                            <select [disabled]="!selectedOpertaionCol"
+                            <select class="custom-select"
+                                    aria-label="Operation to execute"
+                                    [disabled]="!selectedOpertaionCol"
                                     [(ngModel)]="selectedOpertaion"
                                     [ngModelOptions]="{standalone: true}"
                             >
-                                <option [disabled]="true" [ngValue]="undefined" *ngIf="selectedOpertaion === undefined">Select...</option>
-                                <option [disabled]="true" [ngValue]="null" *ngIf="selectedOpertaion === null">Select...</option>
-
+                                <option [disabled]="true" [ngValue]="undefined" *ngIf="selectedOpertaion === undefined">Operation...</option>
+                                <option [disabled]="true" [ngValue]="null" *ngIf="selectedOpertaion === null">Operation...</option>
                                 <option *ngFor="let item of selectedOpertaionCol?.operations || []; let idx = index"
                                         [ngValue]="item"
                                         [selected]="idx === 0"
@@ -221,74 +234,86 @@
                                 >
                                     {{ item.label || '' }}
                                 </option>
-                                <!-- <option value="multiply" selected title="Multiply by factor">Multiply</option>
-                                <option value="multiply-percent" title="Multiply by percent">Multiply %</option>
-                                <option value="set" title="Set to a fixed value">Set</option>
-                                <option value="add" title="Add a fixed value or add it to the list">Add</option>
-                                <option value="remove" title="Remove a fixed value or remove it from the list">Remove</option> -->
                             </select>
-                            <button type="button" class="btn btn-success"
+                            <button type="button"
+                                    class="btn btn-info"
                                     [disabled]="!selectedOpertaionCol || !selectedOpertaion"
                                     (click)="changeAttr(changeInput.value)"
-                                    title="Execute the operation"
+                                    title="Execute the selected operation"
                             >
-                                Exec
+                                Apply
                             </button>
                         </div>
                     </div>
-                    <div class="d-flex flex-row">
-                        <button type="button" class="btn btn-success ml-1 mr-1"
-                                (click)="validate(true)"
-                        >
-                            Validate
-                        </button>
-                        <button type="button" class="btn btn-success ml-1 mr-1"
-                                (click)="csvExport()"
-                        >
-                            CSV Export
-                        </button>
-                        <button type="button" class="btn btn-success ml-1 mr-1"
-                                [disabled]="!configForm.form.valid"
-                                (click)="downloadFiles()"
-                        >
-                            Download
-                        </button>
+
+                    <div class="action-group utility-actions">
+                        <span class="action-group-label">Review and export</span>
+                        <div class="button-row">
+                            <button type="button" class="btn btn-outline-light" (click)="validate(true)" title="Validate all loaded types">
+                                Validate
+                            </button>
+                            <button type="button" class="btn btn-outline-light" (click)="csvExport()" title="Export visible grid data as CSV">
+                                Export CSV
+                            </button>
+                            <button type="button"
+                                    class="btn btn-outline-light"
+                                    [disabled]="!configForm.form.valid"
+                                    (click)="downloadFiles()"
+                                    title="Download edited configuration files"
+                            >
+                                Download files
+                            </button>
+                        </div>
                     </div>
-                    <div class="d-flex flex-row">
-                        <div class="d-flex flex-row ml-1 mr-1" style="align-items: center;">
-                            <label class="form-label" style="white-space: nowrap;">Create Backup</label>
-                            <input type="checkbox" class="form-control form-control-sm mx-1"
-                                   [(ngModel)]="withBackup"
-                                   [ngModelOptions]="{standalone: true}"
-                                   [disabled]="submitting"
-                            >
+
+                    <div class="action-group save-actions">
+                        <span class="action-group-label">Save to server</span>
+                        <div class="save-options">
+                            <label for="types-create-backup" title="Create a backup before saving">
+                                <input id="types-create-backup"
+                                       type="checkbox"
+                                       [(ngModel)]="withBackup"
+                                       [ngModelOptions]="{standalone: true}"
+                                       [disabled]="submitting"
+                                >
+                                Create backup
+                            </label>
+                            <label for="types-restart-server" title="Restart the server after saving">
+                                <input id="types-restart-server"
+                                       type="checkbox"
+                                       [(ngModel)]="withRestart"
+                                       [ngModelOptions]="{standalone: true}"
+                                       [disabled]="submitting"
+                                >
+                                Restart server
+                            </label>
                         </div>
-                        <div class="d-flex flex-row ml-1 mr-1" style="align-items: center;">
-                            <label class="form-label" style="white-space: nowrap;">Restart Server</label>
-                            <input type="checkbox" class="form-control form-control-sm mx-1"
-                                   [(ngModel)]="withRestart"
-                                   [ngModelOptions]="{standalone: true}"
-                                   [disabled]="submitting"
+                        <div class="button-row">
+                            <button type="submit"
+                                    class="btn btn-success"
+                                    [disabled]="!configForm.form.valid || submitting"
+                                    title="Validate and save all changes"
                             >
+                                <fa-icon *ngIf="submitting" [icon]='["fas", "spinner"]' [classes]="['fa-spin']"></fa-icon>
+                                {{ submitting ? 'Saving...' : 'Submit changes' }}
+                            </button>
+                            <button type="button"
+                                    class="btn btn-outline-light"
+                                    (click)="resetClicked()"
+                                    [disabled]="submitting"
+                                    title="Reload files and discard unsaved changes"
+                            >
+                                Reset
+                            </button>
                         </div>
-                        <button type="submit" class="btn btn-success ml-1 mr-1"
-                                [disabled]="!configForm.form.valid || submitting"
-                        >
-                            <fa-icon *ngIf="submitting" [icon]='["fas", "spinner"]' [classes]="['fa-spin']"></fa-icon>
-                            Submit
-                        </button>
-                        <button type="button" class="btn btn-primary ml-1 mr-1"
-                                (click)="resetClicked()"
-                                [disabled]="submitting"
-                        >
-                            Reset
-                        </button>
                     </div>
                 </div>
             </form>
         </div>
-        <div class="card-body" *ngIf="loading">
-            <fa-icon [icon]='["fas", "spinner"]' [classes]="['fa-spin']"></fa-icon>
+
+        <div class="card-body workbench-loading" *ngIf="loading" role="status" aria-live="polite">
+            <fa-icon [icon]='["fas", "spinner"]' [classes]="['fa-spin']" aria-hidden="true"></fa-icon>
+            <span>Loading configuration files...</span>
         </div>
     </sb-card>
 </sb-layout-dashboard>

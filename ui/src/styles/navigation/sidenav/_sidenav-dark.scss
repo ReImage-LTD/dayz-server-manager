@@ -18,9 +18,12 @@
       }
       &:hover {
         color: $sidenav-dark-link-active-color;
+        background: rgba(255, 255, 255, 0.04);
       }
       &.active {
         color: $sidenav-dark-link-active-color;
+        background: var(--ops-accent-soft, rgba(168, 189, 118, 0.13));
+        box-shadow: inset 2px 0 var(--ops-accent, #a8bd76);
         .sb-nav-link-icon {
           color: $sidenav-dark-link-active-color;
         }

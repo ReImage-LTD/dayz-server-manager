@@ -85,7 +85,7 @@ describe('Test class ConfigFileHelper', () => {
             commentJson.stringify(
                 Object.assign(
                     new Config(),
-                    <Partial<Config>>{
+                    {
                         instanceId: 'test-instance',
                         admins: [{
                             userId: 'test-admin',
@@ -94,7 +94,7 @@ describe('Test class ConfigFileHelper', () => {
                         }],
                         rconPassword: 'test123',
                         steamUsername: 'testuser'
-                    }
+                    } as Partial<Config>
                 ),
             ),
         );
@@ -108,6 +108,42 @@ describe('Test class ConfigFileHelper', () => {
         expect(cfgContent).to.include('test123');
         expect(cfgContent).to.include('test-admin');
         expect(cfgContent).to.include('testuser');
+    });
+
+    it('reads revisions and rejects stale config updates', () => {
+        memfs({ ['/' + ConfigFileHelper.CFG_NAME]: VALID_CONFIG }, '/', injector);
+        const helper = injector.resolve(ConfigFileHelper);
+        const document = helper.getRevisionedConfig();
+
+        expect(document.config).to.include(ConfigFileHelper.REDACTED_SECRET);
+        expect(document.config).not.to.include('test123');
+        expect(document.revision).to.have.length(64);
+        expect(() => helper.writeConfig(VALID_CONFIG, 'stale')).to.throw('changed since it was read');
+        expect(helper.getConfigFileContent(helper.getConfigFilePath())).to.equal(VALID_CONFIG);
+    });
+
+    it('redacts remote node secrets and preserves redacted values on update', () => {
+        const config = commentJson.parse(VALID_CONFIG) as any;
+        config.remoteNodes = [{
+            id: 'remote',
+            name: 'Remote',
+            endpoint: 'https://remote.example/fleet/agent',
+            sharedSecret: 'fleet-secret',
+            capabilities: ['serverinfo'],
+        }];
+        memfs({ ['/' + ConfigFileHelper.CFG_NAME]: commentJson.stringify(config) }, '/', injector);
+        const helper = injector.resolve(ConfigFileHelper);
+
+        const redacted = helper.getRevisionedConfig();
+        expect(redacted.config).not.to.include('fleet-secret');
+        expect(redacted.config).to.include(ConfigFileHelper.REDACTED_SECRET);
+        helper.writeConfig(redacted.config, redacted.revision);
+
+        expect(helper.getConfigFileContent(helper.getConfigFilePath())).to.include('fleet-secret');
+    });
+
+    it('provides a safe empty remote node default', () => {
+        expect(new Config().remoteNodes).to.deep.equal([]);
     });
 
     it('ConfigFileHelper-writeConfig-errors', () => {

@@ -1,21 +1,35 @@
 <sb-layout-dashboard>
     <sb-dashboard-head title="Logs" [hideBreadcrumbs]="false"></sb-dashboard-head>
-    <sb-card background="h-100">
-        <div class="card-header p-0 log-tabs">
-            <ul class="nav-tabs" [(activeId)]="activeTab" [animation]="false" ngbNav #nav="ngbNav">
-                <li [ngbNavItem]="1" [routerLink]="'rpt'">
-                    <a ngbNavLink><fa-icon class="mr-1" [icon]='["fas", "clipboard-list"]'></fa-icon>RPT Logs</a>
-                </li>
-                <li [ngbNavItem]="2" [routerLink]="'adm'">
-                    <a ngbNavLink><fa-icon class="mr-1" [icon]='["fas", "clipboard-list"]'></fa-icon>ADM Logs</a>
-                </li>
-                <li [ngbNavItem]="3" [routerLink]="'script'">
-                    <a ngbNavLink><fa-icon class="mr-1" [icon]='["fas", "clipboard-list"]'></fa-icon>Script Logs</a>
-                </li>
-            </ul>
-        </div>
-        <div class="card-body d-flex flex-column p-0 h-100">
+    <div class="logs-console">
+        <header class="logs-heading">
+            <div>
+                <span class="eyebrow">LIVE TELEMETRY</span>
+                <h2>Server logs</h2>
+                <p>Inspect runtime, administration, and script output as it arrives.</p>
+            </div>
+            <span class="stream-status"><i aria-hidden="true"></i>Streams connected</span>
+        </header>
+
+        <nav class="log-tabs" aria-label="Log stream">
+            <a class="log-tab" routerLink="rpt" routerLinkActive="active" #rptLink="routerLinkActive"
+               [attr.aria-current]="rptLink.isActive ? 'page' : null">
+                <span class="tab-code">RPT</span>
+                <span><strong>Runtime</strong><small>Server events &amp; diagnostics</small></span>
+            </a>
+            <a class="log-tab" routerLink="adm" routerLinkActive="active" #admLink="routerLinkActive"
+               [attr.aria-current]="admLink.isActive ? 'page' : null">
+                <span class="tab-code">ADM</span>
+                <span><strong>Administration</strong><small>Players &amp; RCON activity</small></span>
+            </a>
+            <a class="log-tab" routerLink="script" routerLinkActive="active" #scriptLink="routerLinkActive"
+               [attr.aria-current]="scriptLink.isActive ? 'page' : null">
+                <span class="tab-code">SCR</span>
+                <span><strong>Scripts</strong><small>Game and mod output</small></span>
+            </a>
+        </nav>
+
+        <main class="monitor-stage" aria-label="Selected log stream">
             <router-outlet></router-outlet>
-        </div>
-    </sb-card>
+        </main>
+    </div>
 </sb-layout-dashboard>
