@@ -1,44 +1,33 @@
 import * as childProcess from 'child_process';
 
-/* istanbul ignore next */
 export const isRunFromWindowsGUI = (): boolean => {
     if (process.platform !== 'win32') {
         return false;
     }
 
-    // eslint-disable-next-line prefer-template
-    const stdout = (childProcess.spawnSync(
-        'cmd',
-        [
-            '/c',
+    let result: childProcess.SpawnSyncReturns<string>;
+    try {
+        result = childProcess.spawnSync(
+            'powershell.exe',
             [
-                'wmic',
-                'process',
-                'get',
-                'Name,ProcessId',
-                '/VALUE',
-            ].join(' '),
-        ],
-    ).stdout + '')
-        .replace(/\r/g, '')
-        .split('\n\n')
-        .filter((x) => !!x)
-        .map(
-            (x) => x
-                .split('\n')
-                .filter((y) => !!y)
-                .map((y) => {
-                    const equalIdx = y.indexOf('=');
-                    return [y.slice(0, equalIdx).trim(), y.slice(equalIdx + 1).trim()];
-                }),
-        )
-        .filter((x) => x[1][1] === `${process.ppid}`);
-
-    if (!stdout?.length) {
+                '-NoProfile',
+                '-NonInteractive',
+                '-Command',
+                `(Get-CimInstance Win32_Process -Filter "ProcessId = ${process.ppid}").Name`,
+            ],
+            {
+                encoding: 'utf8',
+            },
+        );
+    } catch {
         return false;
     }
 
-    const parentName = stdout[0]?.[0]?.[1]?.toLowerCase();
+    if (result.status !== 0 || !result.stdout) {
+        return false;
+    }
+
+    const parentName = result.stdout.trim().toLowerCase();
     return (
         parentName === 'ApplicationFrameHost.exe'.toLowerCase()
         || parentName === 'explorer.exe'

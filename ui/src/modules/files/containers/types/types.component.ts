@@ -222,6 +222,18 @@ export class TypesComponent implements OnInit {
         }
     }
 
+    protected async resolveMissionFile(file: string): Promise<string> {
+        const separatorIndex = file.lastIndexOf('/');
+        const dir = separatorIndex === -1 ? '/' : file.slice(0, separatorIndex);
+        const fileName = file.slice(separatorIndex + 1);
+        const entries = await firstValueFrom(this.appCommon.fetchMissionDir(dir)).catch(() => []);
+        const resolvedFile = entries.find((entry) => entry.toLowerCase() === fileName.toLowerCase());
+
+        return resolvedFile
+            ? `${separatorIndex === -1 ? '' : `${dir}/`}${resolvedFile}`
+            : file;
+    }
+
     public async resetWrapper(): Promise<void> {
 
         if (this.loading) return;
@@ -237,7 +249,7 @@ export class TypesComponent implements OnInit {
 
         // limits
         try {
-            const limits = new LimitsFileWrapper('cfglimitsdefinition.xml');
+            const limits = new LimitsFileWrapper(await this.resolveMissionFile('cfglimitsdefinition.xml'));
             await limits.parse(await firstValueFrom(this.appCommon.fetchMissionFile(limits.file)));
             this.files.push(limits);
 
@@ -408,12 +420,12 @@ export class TypesComponent implements OnInit {
 
         // economy core + types
         try {
-            const core = new CoreFileWrapper('cfgEconomyCore.xml');
+            const core = new CoreFileWrapper(await this.resolveMissionFile('cfgEconomyCore.xml'));
             await core.parse(await firstValueFrom(this.appCommon.fetchMissionFile(core.file)));
             this.files.push(core);
 
-            const typesFiles: string[] = ['db/types.xml'];
-            const spawnableTypesFiles: string[] = ['cfgspawnabletypes.xml'];
+            const typesFiles: string[] = [await this.resolveMissionFile('db/types.xml')];
+            const spawnableTypesFiles: string[] = [await this.resolveMissionFile('cfgspawnabletypes.xml')];
             for (const ceEntry of (core.content.economycore.ce || [])) {
                 const folder = ceEntry.$.folder;
                 for (const file of ceEntry.file) {

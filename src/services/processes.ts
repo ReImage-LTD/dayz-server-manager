@@ -273,7 +273,26 @@ export interface IProcessFetcher {
 @injectable()
 export class WindowsProcessFetcher extends IService implements IProcessFetcher {
 
-    private static readonly WMIC_VALUES = Object.keys(new ProcessEntry());
+    private static readonly POWERSHELL_SCRIPT = [
+        '[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)',
+        'Get-CimInstance Win32_Process | ForEach-Object {',
+        '    $creationDate = ""',
+        '    if ($_.CreationDate) {',
+        '        $offset = [int][TimeZoneInfo]::Local.GetUtcOffset($_.CreationDate).TotalMinutes',
+        '        $creationDate = $_.CreationDate.ToString("yyyyMMddHHmmss.ffffff") + ("{0:+000;-000;+000}" -f $offset)',
+        '    }',
+        '    [PSCustomObject]@{',
+        '        Name = [string]$_.Name',
+        '        ProcessId = [string]$_.ProcessId',
+        '        ExecutablePath = [string]$_.ExecutablePath',
+        '        CommandLine = [string]$_.CommandLine',
+        '        PrivatePageCount = [string]$_.PrivatePageCount',
+        '        CreationDate = $creationDate',
+        '        UserModeTime = [string]$_.UserModeTime',
+        '        KernelModeTime = [string]$_.KernelModeTime',
+        '    }',
+        '} | ConvertTo-Json -Compress',
+    ].join('\n');
 
     public constructor(
         loggerFactory: LoggerFactory,
@@ -285,47 +304,35 @@ export class WindowsProcessFetcher extends IService implements IProcessFetcher {
 
     public async getProcessList(exeName?: string): Promise<ProcessEntry[]> {
         const result = await this.spawner.spawnForOutput(
-            'cmd',
+            'powershell.exe',
             [
-                '/c',
-                [
-                    'wmic',
-                    'process',
-                    'get',
-                    // ...(exeName ? ['where', `${exeName}`] : []),
-                    `${WindowsProcessFetcher.WMIC_VALUES.join(',')}`,
-                    '/VALUE',
-                ].join(' '),
+                '-NoProfile',
+                '-NonInteractive',
+                '-Command',
+                WindowsProcessFetcher.POWERSHELL_SCRIPT,
             ],
             {
                 dontThrow: true,
             },
         );
-        const procs: ProcessEntry[] = [];
-        if (result.stdout) {
-            procs.push(
-                ...result.stdout
-                    .replace(/\r/g, '')
-                    .split('\n\n')
-                    .filter((x) => !!x)
-                    .map(
-                        (x) => x
-                            .split('\n')
-                            .filter((y) => !!y)
-                            .map((y) => {
-                                const equalIdx = y.indexOf('=');
-                                return [y.slice(0, equalIdx).trim(), y.slice(equalIdx + 1).trim()];
-                            }),
-                    )
-                    .map((x: string[][]) => {
-                        let proc = new ProcessEntry();
-                        x.forEach((y) => proc = merge(proc, { [y[0]]: y[1] }));
-                        return proc;
-                    })
-                    .filter((x) => this.paths.samePath(x?.ExecutablePath, exeName)),
-            );
+        if (result.status !== 0) {
+            return [];
         }
-        return procs;
+
+        const stdout = (result.stdout || '').replace(/^\uFEFF/, '').trim();
+        if (!stdout) {
+            return [];
+        }
+
+        try {
+            const output = JSON.parse(stdout);
+            const procs = Array.isArray(output) ? output : [output];
+            return procs
+                .map((x) => merge(new ProcessEntry(), x))
+                .filter((x) => this.paths.samePath(x?.ExecutablePath, exeName));
+        } catch {
+            return [];
+        }
     }
 
 }

@@ -175,6 +175,45 @@ describe('Test class ServerStarter', () => {
         expect(rcon.shutdown.callCount).to.equal(1);
     });
 
+    it('ServerStarter-adjustDayzSettingXml-preservesZeroValues', async () => {
+        fs = memfs({
+            'testPath': {
+                'dayzsetting.xml': '<jobsystem globalqueue="1" threadqueue="1"><pc maxcores="1" reservedcores="1" /></jobsystem>',
+            },
+        }, '/', injector);
+        manager.getServerPath.returns('/testPath');
+        manager.config = {
+            dayzsettingglobalqueue: 0,
+            dayzsettingthreadqueue: 0,
+            dayzsettingpcmaxcores: 0,
+            dayzsettingreservedcores: 0,
+        } as any;
+
+        const starter = injector.resolve(ServerStarter);
+        await starter.adjustDayzSettingXml();
+
+        expect(fs.readFileSync('/testPath/dayzsetting.xml', 'utf-8')).to.equal(
+            '<jobsystem globalqueue="0" threadqueue="0"><pc maxcores="0" reservedcores="0" /></jobsystem>',
+        );
+    });
+
+    it('ServerStarter-adjustDayzSettingXml-defaultsMissingValues', async () => {
+        fs = memfs({
+            'testPath': {
+                'dayzsetting.xml': '<jobsystem globalqueue="1" threadqueue="1"><pc maxcores="1" reservedcores="1" /></jobsystem>',
+            },
+        }, '/', injector);
+        manager.getServerPath.returns('/testPath');
+        manager.config = {} as any;
+
+        const starter = injector.resolve(ServerStarter);
+        await starter.adjustDayzSettingXml();
+
+        expect(fs.readFileSync('/testPath/dayzsetting.xml', 'utf-8')).to.equal(
+            '<jobsystem globalqueue="4096" threadqueue="1024"><pc maxcores="2" reservedcores="1" /></jobsystem>',
+        );
+    });
+
     it('ServerStarter-startServer', async () => {
 
         const spawnMock = ImportMock.mockFunction(childProcess, 'spawn').returns({

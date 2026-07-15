@@ -86,16 +86,16 @@ export class ServerStarter extends IService {
             let content = this.fs.readFileSync(settingPath, { encoding: 'utf-8' });
             if (!content) return;
 
-            const globalQueue = this.manager.config.dayzsettingglobalqueue || 4096;
+            const globalQueue = this.manager.config.dayzsettingglobalqueue ?? 4096;
             content = content.replace(/globalqueue="\d+"/g, `globalqueue="${globalQueue}"`);
 
-            const threadQueue = this.manager.config.dayzsettingthreadqueue || 1024;
+            const threadQueue = this.manager.config.dayzsettingthreadqueue ?? 1024;
             content = content.replace(/threadqueue="\d+"/g, `threadqueue="${threadQueue}"`);
 
-            const maxcores = this.manager.config.dayzsettingpcmaxcores || 2;
+            const maxcores = this.manager.config.dayzsettingpcmaxcores ?? 2;
             content = content.replace(/maxcores="\d+"/g, `maxcores="${maxcores}"`);
 
-            const reservedcores = this.manager.config.dayzsettingreservedcores || 1;
+            const reservedcores = this.manager.config.dayzsettingreservedcores ?? 1;
             content = content.replace(/reservedcores="\d+"/g, `reservedcores="${reservedcores}"`);
 
             this.log.log(LogLevel.INFO, `Adjusting dayzsetting.xml`);

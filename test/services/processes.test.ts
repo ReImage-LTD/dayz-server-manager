@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { expect } from '../expect';
 import {
     ProcessEntry,
@@ -16,101 +17,28 @@ import { Paths } from '../../src/services/paths';
 import { LoggerFactory } from '../../src/services/loggerfactory';
 import { FSAPI, InjectionTokens } from '../../src/util/apis';
 
-export const WMIC_OUTPUT = `
-
-Caption=Discord.exe
-CommandLine="C:\\Discord\\app-1.0.X\\Discord.exe" --type=renderer
-CreationClassName=Win32_Process
-CreationDate=20210513105049.093991+120
-CSCreationClassName=Win32_ComputerSystem
-CSName=TEST
-Description=Discord.exe
-ExecutablePath=C:\\Discord\\app-1.0.X\\Discord.exe
-ExecutionState=
-Handle=14300
-HandleCount=874
-InstallDate=
-KernelModeTime=2151093750
-MaximumWorkingSetSize=1380
-MinimumWorkingSetSize=200
-Name=Discord.exe
-OSCreationClassName=Win32_OperatingSystem
-OSName=Microsoft Windows 10 Pro|C:\\Windows|\\Device\\Harddisk0\\Partition3
-OtherOperationCount=1216445
-OtherTransferCount=36483076
-PageFaults=3105179
-PageFileUsage=216140
-ParentProcessId=15476
-PeakPageFileUsage=264836
-PeakVirtualSize=838643712
-PeakWorkingSetSize=248604
-Priority=8
-PrivatePageCount=221327360
-ProcessId=14300
-QuotaNonPagedPoolUsage=123
-QuotaPagedPoolUsage=743
-QuotaPeakNonPagedPoolUsage=136
-QuotaPeakPagedPoolUsage=881
-ReadOperationCount=36293
-ReadTransferCount=66002197
-SessionId=1
-Status=
-TerminationDate=
-ThreadCount=38
-UserModeTime=1351406250
-VirtualSize=757694464
-WindowsVersion=10.0.19042
-WorkingSetSize=181981184
-WriteOperationCount=30428
-WriteTransferCount=77941777
-
-
-Caption=Discord.exe
-CommandLine="C:\\Discord\\app-1.0.X\\Discord.exe" --type=utility
-CreationClassName=Win32_Process
-CreationDate=20210513105056.678847+120
-CSCreationClassName=Win32_ComputerSystem
-CSName=TEST
-Description=Discord.exe
-ExecutablePath=C:\\Discord\\app-1.0.X\\Discord.exe
-ExecutionState=
-Handle=3288
-HandleCount=306
-InstallDate=
-KernelModeTime=1562500
-MaximumWorkingSetSize=1380
-MinimumWorkingSetSize=200
-Name=Discord.exe
-OSCreationClassName=Win32_OperatingSystem
-OSName=Microsoft Windows 10 Pro|C:\\Windows|\\Device\\Harddisk0\\Partition3
-OtherOperationCount=546
-OtherTransferCount=12300
-PageFaults=17397
-PageFileUsage=13368
-ParentProcessId=15476
-PeakPageFileUsage=13608
-PeakVirtualSize=294477824
-PeakWorkingSetSize=59056
-Priority=8
-PrivatePageCount=13688832
-ProcessId=3288
-QuotaNonPagedPoolUsage=24
-QuotaPagedPoolUsage=408
-QuotaPeakNonPagedPoolUsage=26
-QuotaPeakPagedPoolUsage=410
-ReadOperationCount=545
-ReadTransferCount=11260
-SessionId=1
-Status=
-TerminationDate=
-ThreadCount=8
-UserModeTime=2187500
-VirtualSize=290512896
-WindowsVersion=10.0.X
-WorkingSetSize=59183104
-WriteOperationCount=612
-WriteTransferCount=20544
-`;
+export const POWERSHELL_OUTPUT = JSON.stringify([
+    {
+        Name: 'Discord.exe',
+        ProcessId: '14300',
+        ExecutablePath: 'C:\\Discord\\app-1.0.X\\Discord.exe',
+        CommandLine: '"C:\\Discord\\app-1.0.X\\Discord.exe" --type=renderer',
+        PrivatePageCount: '221327360',
+        CreationDate: '20210513105049.093991+120',
+        UserModeTime: '1351406250',
+        KernelModeTime: '2151093750',
+    },
+    {
+        Name: 'Discord.exe',
+        ProcessId: '3288',
+        ExecutablePath: 'C:\\Discord\\app-1.0.X\\Discord.exe',
+        CommandLine: '"C:\\Discord\\app-1.0.X\\Discord.exe" --type=utility',
+        PrivatePageCount: '13688832',
+        CreationDate: '20210513105056.678847+120',
+        UserModeTime: '2187500',
+        KernelModeTime: '1562500',
+    },
+]);
 
 describe('Test class ProcessEntry', () => {
 
@@ -198,7 +126,7 @@ describe('Test class WinProcessFetcher', () => {
 
         (injector.resolve(ProcessSpawner).spawnForOutput as sinon.SinonStub).returns({
             status: 0,
-            stdout: WMIC_OUTPUT,
+            stdout: POWERSHELL_OUTPUT,
             stderr: '',
         });
 
@@ -208,6 +136,54 @@ describe('Test class WinProcessFetcher', () => {
         expect(result.length).to.equal(2);
         expect(result[0].ProcessId).to.equal('14300');
         expect(result[0].ExecutablePath).to.equal('C:\\Discord\\app-1.0.X\\Discord.exe');
+        expect(result[0].CreationDate).to.equal('20210513105049.093991+120');
+
+        const spawn = injector.resolve(ProcessSpawner).spawnForOutput as sinon.SinonStub;
+        expect(spawn.firstCall.args[0]).to.equal('powershell.exe');
+        const args = spawn.firstCall.args[1].join(' ');
+        expect(args).to.include('Get-CimInstance Win32_Process');
+        expect(args).to.not.include('wmic');
+    });
+
+    it('WinProcesses-getProcessList-single-result', async () => {
+        const processes = injector.resolve(WindowsProcessFetcher);
+
+        (injector.resolve(Paths).samePath as sinon.SinonStub).returns(true);
+        (injector.resolve(ProcessSpawner).spawnForOutput as sinon.SinonStub).returns({
+            status: 0,
+            stdout: JSON.stringify(JSON.parse(POWERSHELL_OUTPUT)[0]),
+            stderr: '',
+        });
+
+        const result = await processes.getProcessList('C:\\Discord\\app-1.0.X\\Discord.exe');
+
+        expect(result.length).to.equal(1);
+        expect(Object.keys(result[0])).to.deep.equal(Object.keys(new ProcessEntry()));
+        expect(result[0].CommandLine).to.contain('--type=renderer');
+    });
+
+    it('WinProcesses-getProcessList-command-failure', async () => {
+        const processes = injector.resolve(WindowsProcessFetcher);
+
+        (injector.resolve(ProcessSpawner).spawnForOutput as sinon.SinonStub).returns({
+            status: 1,
+            stdout: '',
+            stderr: 'Get-CimInstance failed',
+        });
+
+        expect(await processes.getProcessList()).to.deep.equal([]);
+    });
+
+    it('WinProcesses-getProcessList-malformed-output', async () => {
+        const processes = injector.resolve(WindowsProcessFetcher);
+
+        (injector.resolve(ProcessSpawner).spawnForOutput as sinon.SinonStub).returns({
+            status: 0,
+            stdout: 'PowerShell warning before JSON',
+            stderr: '',
+        });
+
+        expect(await processes.getProcessList()).to.deep.equal([]);
     });
 
 });
@@ -351,7 +327,7 @@ describe('Test class Processes', () => {
 
         (injector.resolve(ProcessSpawner).spawnForOutput as sinon.SinonStub).returns({
             status: 0,
-            stdout: WMIC_OUTPUT,
+            stdout: POWERSHELL_OUTPUT,
             stderr: '',
         });
 

@@ -83,11 +83,17 @@ export class DiscordMessageHandler extends IService {
         const templateParams = (handler.params || []);
         for (let i = 0; i < templateParams.length; i++) {
             if (i >= args.length) {
+                if (templateParams[i].optional) {
+                    continue;
+                }
                 await message.reply(`Wrong param count. Usage: ${this.formatCommandUsage(command, handler)}`);
                 return;
             }
             try {
-                const val = templateParams[i].parse ? templateParams[i].parse(args[i]) : args[i];
+                const arg = i === templateParams.length - 1 && !templateParams[i].parse
+                    ? args.slice(i).join(' ')
+                    : args[i];
+                const val = templateParams[i].parse ? templateParams[i].parse(arg) : arg;
                 req[templateParams[i].location || 'body'][templateParams[i].name] = val;
             } catch {
                 await message.reply(`Could not parse param: '${templateParams[i].name}'. Usage: ${this.formatCommandUsage(command, handler)}`);
