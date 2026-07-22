@@ -7,7 +7,7 @@
 [![GitHub commits](https://img.shields.io/github/commits-since/mr-guard/dayz-server-manager/latest.svg)](https://GitHub.com/mr-guard/dayz-server-manager/commit/)
 [![GitHub release](https://img.shields.io/github/release/mr-guard/dayz-server-manager.svg)](https://GitHub.com/mr-guard/dayz-server-manager/releases/latest)
 [![Github all releases](https://img.shields.io/github/downloads/mr-guard/dayz-server-manager/total.svg)](https://GitHub.com/mr-guard/dayz-server-manager/releases/)  
-[![Discord](https://img.shields.io/discord/970272136688205874)](https://discord.gg/pKwJcXutBa)
+[![Discord](https://img.shields.io/discord/1158495027627040818)](https://discord.gg/8qHQZnaFbh)
 
 > **Fork notice:** This repository is a fork of [mr-guard/dayz-server-manager](https://github.com/mr-guard/dayz-server-manager/), originally created by mr-guard. The original project and its history remain available at the linked repository.
 
